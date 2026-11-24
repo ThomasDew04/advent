@@ -1,0 +1,391 @@
+import './LivingRoom.css'
+
+// Deterministische pseudo-random zodat de scène bij elke render gelijk blijft
+const rand = (i) => {
+  const x = Math.sin(i * 12.9898) * 43758.5453
+  return x - Math.floor(x)
+}
+
+// Raam
+const WINDOW = { x: 140, y: 150, w: 260, h: 320 }
+
+const SNOWFLAKES = Array.from({ length: 45 }, (_, i) => ({
+  x: WINDOW.x + rand(i + 1) * WINDOW.w,
+  r: 1.5 + rand(i + 100) * 2.5,
+  duration: 6 + rand(i + 200) * 6,
+  delay: -rand(i + 300) * 12,
+  drift: (rand(i + 400) - 0.5) * 40,
+}))
+
+// Kerstboom: drie lagen (top, basis-y, halve breedte aan de basis)
+const TREE_X = 1300
+const TIERS = [
+  { apex: 150, base: 320, half: 110 },
+  { apex: 240, base: 460, half: 170 },
+  { apex: 360, base: 610, half: 230 },
+]
+
+const LIGHT_COLORS = ['#ffd45c', '#ff5a5a', '#6ecbff', '#9cff7a', '#ff9de2']
+
+// Lichtjes in licht doorhangende slingers per laag
+const LIGHTS = TIERS.flatMap((tier, t) => {
+  const rows = [0.55, 0.92]
+  return rows.flatMap((frac, r) => {
+    const y = tier.apex + (tier.base - tier.apex) * frac
+    const half = tier.half * frac * 0.9
+    const count = 4 + t * 2 + r * 2
+    return Array.from({ length: count }, (_, k) => {
+      const p = k / (count - 1)
+      const x = TREE_X - half + p * half * 2
+      const sag = Math.sin(p * Math.PI) * 14
+      const idx = t * 100 + r * 20 + k
+      return {
+        x,
+        y: y + sag - 6,
+        color: LIGHT_COLORS[idx % LIGHT_COLORS.length],
+        delay: rand(idx + 500) * 2.5,
+      }
+    })
+  })
+})
+
+const BAUBLES = [
+  { x: 1270, y: 280, c: '#c0392b' },
+  { x: 1335, y: 300, c: '#d4af37' },
+  { x: 1220, y: 420, c: '#d4af37' },
+  { x: 1310, y: 400, c: '#2e86c1' },
+  { x: 1395, y: 440, c: '#c0392b' },
+  { x: 1170, y: 580, c: '#2e86c1' },
+  { x: 1265, y: 540, c: '#c0392b' },
+  { x: 1360, y: 560, c: '#d4af37' },
+  { x: 1440, y: 590, c: '#c0392b' },
+]
+
+const PRESENTS = [
+  { x: 1120, y: 600, w: 80, h: 55, box: '#b03a2e', ribbon: '#f4d03f' },
+  { x: 1205, y: 615, w: 60, h: 40, box: '#1e8449', ribbon: '#fdfefe' },
+  { x: 1350, y: 595, w: 90, h: 60, box: '#2874a6', ribbon: '#e74c3c' },
+  { x: 1445, y: 612, w: 65, h: 45, box: '#d4ac0d', ribbon: '#922b21' },
+]
+
+const STOCKINGS = [
+  { x: 690, color: '#b03a2e' },
+  { x: 790, color: '#1e8449' },
+  { x: 890, color: '#b03a2e' },
+]
+
+function LivingRoom() {
+  return (
+    <svg
+      className="living-room"
+      viewBox="0 0 1600 900"
+      preserveAspectRatio="xMidYMid slice"
+      role="img"
+      aria-label="Een gezellige woonkamer met een open haard en een versierde kerstboom"
+    >
+      <defs>
+        <pattern id="wallpaper" width="48" height="48" patternUnits="userSpaceOnUse">
+          <rect width="48" height="48" fill="#8a4636" />
+          <rect width="24" height="48" fill="#81402f" />
+          <circle cx="12" cy="24" r="2.5" fill="#9c5644" />
+        </pattern>
+
+        <pattern id="planks" width="220" height="60" patternUnits="userSpaceOnUse">
+          <rect width="220" height="60" fill="#6b4226" />
+          <rect width="220" height="30" fill="#704529" />
+          <line x1="0" y1="30" x2="220" y2="30" stroke="#4e2f1a" strokeWidth="2" />
+          <line x1="0" y1="60" x2="220" y2="60" stroke="#4e2f1a" strokeWidth="2" />
+          <line x1="80" y1="0" x2="80" y2="30" stroke="#4e2f1a" strokeWidth="2" />
+          <line x1="170" y1="30" x2="170" y2="60" stroke="#4e2f1a" strokeWidth="2" />
+        </pattern>
+
+        <pattern id="bricks" width="60" height="30" patternUnits="userSpaceOnUse">
+          <rect width="60" height="30" fill="#5a3b30" />
+          <rect x="1.5" y="1.5" width="57" height="12" rx="2" fill="#8e5a46" />
+          <rect x="-28.5" y="16.5" width="57" height="12" rx="2" fill="#86533f" />
+          <rect x="31.5" y="16.5" width="57" height="12" rx="2" fill="#86533f" />
+        </pattern>
+
+        <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#0b1633" />
+          <stop offset="1" stopColor="#2a3d6b" />
+        </linearGradient>
+
+        <radialGradient id="fireGlow" cx="800" cy="580" r="650" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#ffb347" stopOpacity="0.45" />
+          <stop offset="0.5" stopColor="#ff8c2a" stopOpacity="0.12" />
+          <stop offset="1" stopColor="#ff8c2a" stopOpacity="0" />
+        </radialGradient>
+
+        <radialGradient id="lampGlow" cx="250" cy="400" r="260" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#ffe3a3" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#ffe3a3" stopOpacity="0" />
+        </radialGradient>
+
+        <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
+          <stop offset="0.55" stopColor="#000" stopOpacity="0" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.55" />
+        </radialGradient>
+
+        <radialGradient id="lightHalo">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
+
+        <clipPath id="windowClip">
+          <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.w} height={WINDOW.h} />
+        </clipPath>
+      </defs>
+
+      {/* Muur en vloer */}
+      <rect width="1600" height="640" fill="url(#wallpaper)" />
+      <rect y="640" width="1600" height="260" fill="url(#planks)" />
+      <rect y="625" width="1600" height="20" fill="#3e2416" />
+
+      {/* Raam met sneeuw */}
+      <g>
+        <rect x={WINDOW.x - 18} y={WINDOW.y - 18} width={WINDOW.w + 36} height={WINDOW.h + 36} rx="6" fill="#efe3cf" />
+        <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.w} height={WINDOW.h} fill="url(#night)" />
+        <g clipPath="url(#windowClip)">
+          <circle cx="330" cy="215" r="28" fill="#fdf6d8" />
+          <path d="M140 430 Q 220 395 300 420 T 400 410 V 470 H 140 Z" fill="#e8eef7" />
+          {SNOWFLAKES.map((f, i) => (
+            <circle
+              key={i}
+              className="flake"
+              cx={f.x}
+              cy={WINDOW.y - 10}
+              r={f.r}
+              style={{
+                '--duration': `${f.duration}s`,
+                '--delay': `${f.delay}s`,
+                '--drift': `${f.drift}px`,
+              }}
+            />
+          ))}
+        </g>
+        <rect x={WINDOW.x + WINDOW.w / 2 - 5} y={WINDOW.y} width="10" height={WINDOW.h} fill="#efe3cf" />
+        <rect x={WINDOW.x} y={WINDOW.y + WINDOW.h / 2 - 5} width={WINDOW.w} height="10" fill="#efe3cf" />
+        <rect x={WINDOW.x - 30} y={WINDOW.y + WINDOW.h + 12} width={WINDOW.w + 60} height="16" rx="4" fill="#e2d3b8" />
+        {/* Gordijnen */}
+        <rect x="95" y="120" width="350" height="12" rx="6" fill="#4a2c1c" />
+        <path d="M100 130 Q 150 300 105 520 L 70 520 Q 90 300 70 130 Z" fill="#2f5d50" />
+        <path d="M440 130 Q 390 300 435 520 L 470 520 Q 450 300 470 130 Z" fill="#2f5d50" />
+      </g>
+
+      {/* Staande lamp */}
+      <rect width="1600" height="900" fill="url(#lampGlow)" />
+      <g>
+        <rect x="246" y="400" width="8" height="300" fill="#3a2a1f" />
+        <ellipse cx="250" cy="702" rx="40" ry="8" fill="#3a2a1f" />
+        <path d="M205 400 L 295 400 L 275 340 L 225 340 Z" fill="#f3d9a4" />
+        <path d="M205 400 L 295 400" stroke="#d6b77c" strokeWidth="4" />
+      </g>
+
+      {/* Schilderij */}
+      <g>
+        <rect x="712" y="182" width="176" height="136" rx="4" fill="#6b4226" />
+        <rect x="726" y="196" width="148" height="108" fill="#a7c4d8" />
+        <path d="M726 304 L 770 240 L 800 270 L 835 225 L 874 304 Z" fill="#e9f0f5" />
+        <path d="M726 304 L 760 275 L 800 304 Z" fill="#5d8a6b" />
+      </g>
+
+      {/* Open haard */}
+      <g>
+        <rect x="630" y="370" width="340" height="260" fill="url(#bricks)" />
+        <rect x="600" y="350" width="400" height="24" rx="4" fill="#4a2c1c" />
+        <path d="M690 630 V 470 Q 800 420 910 470 V 630 Z" fill="#1a0e0a" />
+
+        {/* Blokken hout */}
+        <rect x="725" y="600" width="150" height="20" rx="10" fill="#5b3a24" />
+        <rect x="740" y="585" width="120" height="18" rx="9" fill="#6e4529" transform="rotate(-6 800 594)" />
+
+        {/* Vuur */}
+        <g className="fire">
+          <path className="flame flame-1" d="M740 600 Q 730 545 765 510 Q 760 550 785 560 Q 790 520 810 490 Q 815 540 840 555 Q 850 530 845 515 Q 880 555 860 600 Z" fill="#ff7b2a" />
+          <path className="flame flame-2" d="M760 600 Q 755 565 780 540 Q 785 565 800 570 Q 805 540 820 525 Q 830 565 845 575 Q 850 590 840 600 Z" fill="#ffb627" />
+          <path className="flame flame-3" d="M780 600 Q 782 580 795 565 Q 800 580 810 582 Q 815 570 822 565 Q 830 585 822 600 Z" fill="#fff1a8" />
+        </g>
+
+        {/* Kousen */}
+        {STOCKINGS.map((s, i) => (
+          <g key={i} transform={`translate(${s.x} 372)`}>
+            <g className="stocking" style={{ '--sway-delay': `${i * 0.7}s` }}>
+              <path d="M0 10 h36 v62 q0 26 -26 26 h-28 q-16 0 -16 -15 q0 -14 16 -16 h18 z" fill={s.color} />
+              <rect x="-4" y="0" width="44" height="16" rx="5" fill="#f5f0e8" />
+            </g>
+          </g>
+        ))}
+
+        {/* Slinger op de schoorsteenmantel */}
+        <path d="M605 352 Q 700 385 800 352 Q 900 385 995 352" fill="none" stroke="#2e6b3f" strokeWidth="10" strokeLinecap="round" />
+        {[650, 720, 800, 880, 950].map((x, i) => (
+          <circle key={i} cx={x} cy={i % 2 ? 370 : 362} r="5" fill={i % 2 ? '#ffd45c' : '#c0392b'} />
+        ))}
+      </g>
+
+      {/* Warme gloed van het vuur */}
+      <rect width="1600" height="900" fill="url(#fireGlow)" className="glow" />
+
+      {/* Tapijt */}
+      <ellipse cx="820" cy="785" rx="420" ry="80" fill="#7b241c" />
+      <ellipse cx="820" cy="785" rx="380" ry="64" fill="none" stroke="#d4ac0d" strokeWidth="4" strokeDasharray="14 10" />
+      <ellipse cx="820" cy="785" rx="300" ry="46" fill="#922b21" />
+
+      {/* Golden retriever puppy op het tapijt */}
+      <g>
+        <ellipse cx="815" cy="808" rx="105" ry="10" fill="#000" opacity="0.22" />
+
+        {/* Kwispelende staart */}
+        <path className="puppy-tail" d="M893 782 Q 930 768 940 790" fill="none" stroke="#c88a48" strokeWidth="14" strokeLinecap="round" />
+
+        {/* Lijf dat rustig ademt */}
+        <ellipse className="puppy-body" cx="832" cy="784" rx="72" ry="26" fill="#d9a05b" />
+        <ellipse cx="840" cy="772" rx="50" ry="10" fill="#e6b373" opacity="0.6" />
+
+        {/* Achterpoot */}
+        <ellipse cx="876" cy="790" rx="28" ry="17" fill="#c88a48" />
+        <ellipse cx="858" cy="804" rx="16" ry="7" fill="#e6b373" />
+
+        {/* Borst */}
+        <ellipse cx="775" cy="780" rx="30" ry="24" fill="#dfa660" />
+
+        {/* Kop */}
+        <circle cx="770" cy="738" r="30" fill="#dfa660" />
+        <ellipse cx="740" cy="746" rx="12" ry="22" fill="#b97a3c" transform="rotate(15 740 746)" />
+        <ellipse cx="800" cy="746" rx="12" ry="22" fill="#b97a3c" transform="rotate(-15 800 746)" />
+
+        {/* Ogen */}
+        <circle cx="759" cy="733" r="4.2" fill="#2a1a10" />
+        <circle cx="781" cy="733" r="4.2" fill="#2a1a10" />
+        <circle cx="760.5" cy="731.5" r="1.4" fill="#fff" />
+        <circle cx="782.5" cy="731.5" r="1.4" fill="#fff" />
+
+        {/* Snuit */}
+        <ellipse cx="770" cy="752" rx="15" ry="11" fill="#f3d29b" />
+        <ellipse cx="770" cy="746" rx="6" ry="4.5" fill="#2a1a10" />
+        <path d="M770 750 v5 M770 755 q-5 4 -9 1 M770 755 q5 4 9 1" fill="none" stroke="#2a1a10" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Halsband */}
+        <path d="M748 766 Q 770 779 792 766" fill="none" stroke="#c0392b" strokeWidth="6" strokeLinecap="round" />
+        <circle cx="770" cy="777" r="4" fill="#d4af37" />
+
+        {/* Voorpootjes */}
+        <ellipse cx="755" cy="801" rx="14" ry="9" fill="#e6b373" />
+        <ellipse cx="788" cy="803" rx="14" ry="9" fill="#e6b373" />
+      </g>
+
+      {/* Fauteuil */}
+      <g>
+        {/* Schaduw op de vloer */}
+        <ellipse cx="450" cy="738" rx="125" ry="10" fill="#000" opacity="0.25" />
+
+        {/* Rugleuning met afgeronde bovenkant */}
+        <path d="M365 650 V 515 Q 365 470 410 468 H 490 Q 535 470 535 515 V 650 Z" fill="#2f5d50" />
+        <rect x="385" y="488" width="130" height="135" rx="22" fill="#376b5c" />
+        {/* Capitonné knopen */}
+        {[
+          [420, 525], [480, 525], [450, 560], [420, 595], [480, 595],
+        ].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r="3" fill="#24493f" />
+        ))}
+
+        {/* Kussen */}
+        <g transform="rotate(-10 430 600)">
+          <rect x="398" y="572" width="64" height="58" rx="16" fill="#c0392b" />
+          <path d="M398 592 H 462 M398 610 H 462 M418 572 V 630 M442 572 V 630" stroke="#e8d5b5" strokeWidth="3" opacity="0.7" />
+        </g>
+
+        {/* Onderstel en zitkussen */}
+        <rect x="345" y="650" width="210" height="58" rx="10" fill="#2a5347" />
+        <rect x="372" y="622" width="156" height="40" rx="12" fill="#43806e" />
+        <rect x="372" y="648" width="156" height="14" rx="6" fill="#3b7363" />
+
+        {/* Armleuningen met omgerolde bovenkant */}
+        <rect x="333" y="580" width="54" height="128" rx="14" fill="#2f5d50" />
+        <ellipse cx="360" cy="582" rx="32" ry="16" fill="#3b7363" />
+        <rect x="513" y="580" width="54" height="128" rx="14" fill="#2f5d50" />
+        <ellipse cx="540" cy="582" rx="32" ry="16" fill="#3b7363" />
+
+        {/* Pootjes */}
+        <path d="M352 706 h16 l-3 28 h-10 z" fill="#3e2416" />
+        <path d="M532 706 h16 l-3 28 h-10 z" fill="#3e2416" />
+      </g>
+
+      {/* Kerstboom */}
+      <g>
+        <rect x={TREE_X - 25} y="600" width="50" height="45" fill="#5b3a24" />
+        <rect x={TREE_X - 60} y="635" width="120" height="30" rx="6" fill="#922b21" />
+        {[...TIERS].reverse().map((t, i) => (
+          <path
+            key={i}
+            d={`M${TREE_X} ${t.apex}
+               L ${TREE_X + t.half} ${t.base}
+               Q ${TREE_X} ${t.base + 22} ${TREE_X - t.half} ${t.base} Z`}
+            fill={['#1d5e3a', '#226b42', '#28794a'][i]}
+          />
+        ))}
+
+        {BAUBLES.map((b, i) => (
+          <g key={i}>
+            <circle cx={b.x} cy={b.y} r="11" fill={b.c} />
+            <circle cx={b.x - 3.5} cy={b.y - 3.5} r="3" fill="#fff" opacity="0.55" />
+          </g>
+        ))}
+
+        {LIGHTS.map((l, i) => (
+          <g key={i} className="tree-light" style={{ '--delay': `${l.delay}s` }}>
+            <circle cx={l.x} cy={l.y} r="14" fill="url(#lightHalo)" opacity="0.35" />
+            <circle cx={l.x} cy={l.y} r="5" fill={l.color} />
+          </g>
+        ))}
+
+        {/* Ster */}
+        <g className="star" transform={`translate(${TREE_X} 142)`}>
+          <circle r="34" fill="url(#lightHalo)" opacity="0.5" />
+          <path
+            d="M0 -28 L 8 -9 L 28 -9 L 12 4 L 18 24 L 0 12 L -18 24 L -12 4 L -28 -9 L -8 -9 Z"
+            fill="#ffd45c"
+            stroke="#e0a800"
+            strokeWidth="2"
+          />
+        </g>
+      </g>
+
+      {/* Cadeautjes */}
+      {PRESENTS.map((p, i) => (
+        <g key={i}>
+          <rect x={p.x} y={p.y} width={p.w} height={p.h} rx="3" fill={p.box} />
+          <rect x={p.x + p.w / 2 - 5} y={p.y} width="10" height={p.h} fill={p.ribbon} />
+          <rect x={p.x} y={p.y + p.h / 2 - 4} width={p.w} height="8" fill={p.ribbon} opacity="0.9" />
+          <ellipse cx={p.x + p.w / 2 - 9} cy={p.y - 4} rx="10" ry="6" fill={p.ribbon} />
+          <ellipse cx={p.x + p.w / 2 + 9} cy={p.y - 4} rx="10" ry="6" fill={p.ribbon} />
+        </g>
+      ))}
+
+      {/* Bordje op een paaltje */}
+      <g transform="translate(1410 710) rotate(6) scale(1.25) translate(-1450 -688)" style={{ filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.45))' }}>
+        <rect x="1442" y="770" width="16" height="200" fill="#5b3a24" />
+        <rect x="1335" y="688" width="230" height="92" rx="10" fill="#5b3a24" />
+        <rect x="1343" y="696" width="214" height="76" rx="6" fill="#8b5a2b" />
+        <path d="M1343 720 H 1557 M1343 746 H 1557" stroke="#7a4e25" strokeWidth="2" />
+        {[[1352, 705], [1548, 705], [1352, 763], [1548, 763]].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r="3" fill="#3e2416" />
+        ))}
+        {/* Hulsttakje */}
+        <ellipse cx="1350" cy="690" rx="14" ry="6" fill="#2e6b3f" transform="rotate(-30 1350 690)" />
+        <ellipse cx="1368" cy="686" rx="14" ry="6" fill="#2e6b3f" transform="rotate(25 1368 686)" />
+        <circle cx="1357" cy="684" r="4" fill="#c0392b" />
+        <circle cx="1364" cy="690" r="4" fill="#c0392b" />
+        <text className="sign-text" x="1450" textAnchor="middle">
+          <tspan x="1450" y="728">Klik ergens</tspan>
+          <tspan x="1450" y="758">om te beginnen</tspan>
+        </text>
+      </g>
+
+      <rect width="1600" height="900" fill="url(#vignette)" pointerEvents="none" />
+    </svg>
+  )
+}
+
+export default LivingRoom

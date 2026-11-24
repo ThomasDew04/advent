@@ -1,0 +1,178 @@
+.living-room {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Sneeuw achter het raam */
+.flake {
+  fill: #fff;
+  opacity: 0.9;
+  animation: fall var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes fall {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(var(--drift), 340px);
+  }
+}
+
+/* Flakkerend vuur */
+.flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flicker 1.2s ease-in-out infinite alternate;
+}
+.flame-2 {
+  animation-duration: 0.9s;
+  animation-delay: -0.3s;
+}
+.flame-3 {
+  animation-duration: 0.7s;
+  animation-delay: -0.5s;
+}
+
+@keyframes flicker {
+  0% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  40% {
+    transform: scale(0.95, 1.08) skewX(2deg);
+  }
+  70% {
+    transform: scale(1.03, 0.94) skewX(-2deg);
+  }
+  100% {
+    transform: scale(0.98, 1.05) skewX(1deg);
+  }
+}
+
+.glow {
+  animation: glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Twinkelende kerstlichtjes */
+.tree-light {
+  animation: twinkle 2.5s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.star {
+  animation: star-pulse 3s ease-in-out infinite;
+}
+
+@keyframes star-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px #ffd45c);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px #ffd45c);
+  }
+}
+
+/* Licht wiegende kousen */
+.stocking {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: sway 4s ease-in-out infinite alternate;
+  animation-delay: var(--sway-delay);
+}
+
+@keyframes sway {
+  from {
+    rotate: -2deg;
+  }
+  to {
+    rotate: 2deg;
+  }
+}
+
+/* Tekst op het bordje */
+.sign-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 25px;
+  font-weight: bold;
+  font-style: italic;
+  fill: #fdf3dc;
+  animation: invite 2.4s ease-in-out infinite;
+}
+
+@keyframes invite {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+/* Puppy: kwispelen en ademen */
+.puppy-tail {
+  transform-box: view-box;
+  transform-origin: 893px 782px;
+  animation: wag 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes wag {
+  from {
+    transform: rotate(-12deg);
+  }
+  to {
+    transform: rotate(14deg);
+  }
+}
+
+.puppy-body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-text,
+  .puppy-tail,
+  .puppy-body,
+  .flake,
+  .flame,
+  .glow,
+  .tree-light,
+  .star,
+  .stocking {
+    animation: none;
+  }
+}
