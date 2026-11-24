@@ -42,20 +42,52 @@ const LIGHT_COLORS = ['#ffd45c', '#ff5a5a', '#6ecbff', '#9cff7a', '#ff9de2']
 
 // Lichtjes langs de dakrand
 const ROOF_LIGHTS = [
-  [[585, 460], [800, 312]],
-  [[1015, 460], [800, 312]],
+  [[524, 476], [800, 268]],
+  [[1076, 476], [800, 268]],
 ].flatMap(([[x1, y1], [x2, y2]], s) =>
   Array.from({ length: 9 }, (_, k) => {
     const t = (k + 0.5) / 9
     const idx = s * 9 + k
     return {
       x: x1 + (x2 - x1) * t,
-      y: y1 + (y2 - y1) * t + 9,
+      y: y1 + (y2 - y1) * t + 10,
       color: LIGHT_COLORS[idx % LIGHT_COLORS.length],
       delay: rand(idx + 1100) * 2.5,
     }
   }),
 )
+
+// Bobbels in de sneeuwlaag op het dak
+const ROOF_SNOW = Array.from({ length: 14 }, (_, i) => {
+  const left = i < 7
+  const t = ((i % 7) + 0.5) / 7
+  const x = left ? 506 + (800 - 506) * t : 1094 - (1094 - 800) * t
+  return { x, y: 468 - (468 - 242) * t - 6, r: 8 + rand(i + 1600) * 6 }
+})
+
+// Blokhut: rijen liggende stammen tussen de balk en de stenen voet
+const LOGS = Array.from({ length: 8 }, (_, i) => 452 + i * 20)
+
+// Stenen fundering in twee verspringende rijen
+const STONES = [612, 628].flatMap((y, row) => {
+  const out = []
+  let x = 596 - row * 14
+  for (let k = 0; x < 1004; k++) {
+    const w = 26 + rand(1200 + row * 50 + k) * 24
+    const x0 = Math.max(598, x)
+    const x1 = Math.min(x + w, 1002)
+    if (x1 - x0 > 6) out.push({ x: x0, y: y + 1, w: x1 - x0, fill: ['#8d96a3', '#7c8592', '#9aa3af'][k % 3] })
+    x += w + 3
+  }
+  return out
+})
+
+// Houtstapel rechts naast het huis
+const WOODPILE = [
+  [1014, 634], [1030, 634], [1046, 634], [1062, 634],
+  [1022, 618], [1038, 618], [1054, 618],
+  [1030, 602], [1046, 602],
+]
 
 const FOOTPRINTS = Array.from({ length: 7 }, (_, i) => ({
   x: 800 + (i % 2 ? 9 : -9) + (i - 3) * 2,
@@ -85,6 +117,56 @@ function Pine({ x, base, h, color, snow = '#f4f8ff' }) {
           />
         </g>
       ))}
+    </g>
+  )
+}
+
+// IJspegels die van een rand naar beneden hangen
+function Icicles({ x1, x2, y, n, seed }) {
+  return (
+    <g>
+      {Array.from({ length: n }, (_, i) => {
+        const x = x1 + ((x2 - x1) * (i + 0.5)) / n
+        const len = 8 + rand(seed + i) * 16
+        const w = 2.5 + rand(seed + i + 40) * 2
+        return <path key={i} d={`M${x - w} ${y} L ${x + w} ${y} L ${x} ${y + len} Z`} fill="#e3f1ff" opacity="0.9" />
+      })}
+    </g>
+  )
+}
+
+const heart = (cx, cy, s) =>
+  `M${cx} ${cy + s} L ${cx - s} ${cy} A ${s / 2} ${s / 2} 0 0 1 ${cx} ${cy - s * 0.5} A ${s / 2} ${s / 2} 0 0 1 ${cx + s} ${cy} Z`
+
+// Raam met groene luiken (met hartje) en een bloembak met dennentakjes
+function ChaletWindow({ x, y, w, h, shutter = 20, box = true, children }) {
+  return (
+    <g>
+      {[x - shutter - 4, x + w + 4].map((sx) => (
+        <g key={sx}>
+          <rect x={sx} y={y - 2} width={shutter} height={h + 4} rx="2" fill="#2f5d3a" stroke="#244a2e" strokeWidth="2" />
+          <path d={`M${sx + 3} ${y + h * 0.22} H ${sx + shutter - 3} M${sx + 3} ${y + h * 0.78} H ${sx + shutter - 3}`} stroke="#244a2e" strokeWidth="2" />
+          <path d={heart(sx + shutter / 2, y + h / 2, shutter * 0.22)} fill="#1a3322" />
+          <rect x={sx - 1} y={y - 7} width={shutter + 2} height="6" rx="3" fill="#f4f8ff" />
+        </g>
+      ))}
+      <rect x={x} y={y} width={w} height={h} fill="url(#outWindow)" />
+      {children}
+      <rect x={x} y={y} width={w} height={h} fill="none" stroke="#f5ecd9" strokeWidth="5" />
+      {box && (
+        <>
+          <path d={`M${x + w / 2} ${y} V ${y + h} M${x} ${y + h / 2} H ${x + w}`} stroke="#f5ecd9" strokeWidth="4" />
+          {Array.from({ length: 7 }, (_, i) => (
+            <ellipse key={i} cx={x - 2 + (i * (w + 4)) / 6} cy={y + h + 2} rx="9" ry="5" fill={i % 2 ? '#1d5e3a' : '#27704a'} />
+          ))}
+          {[0.2, 0.45, 0.7, 0.9].map((t) => (
+            <circle key={t} cx={x + w * t} cy={y + h} r="2.5" fill="#e53935" />
+          ))}
+          <rect x={x - 6} y={y + h + 4} width={w + 12} height="15" rx="2" fill="#6e4426" />
+          <path d={`M${x - 6} ${y + h + 11} H ${x + w + 6}`} stroke="#5a361d" strokeWidth="1.5" />
+          <rect x={x - 8} y={y + h + 2} width={w + 16} height="5" rx="2.5" fill="#f4f8ff" />
+        </>
+      )}
     </g>
   )
 }
@@ -124,7 +206,7 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </radialGradient>
         <clipPath id="outHouseClip">
-          <path d="M600 442 L 800 302 L 1000 442 V 640 H 600 Z" />
+          <path d="M604 452 L 800 288 L 996 452 Z" />
         </clipPath>
         <radialGradient id="outVignette" cx="50%" cy="50%" r="75%">
           <stop offset="0.6" stopColor="#000" stopOpacity="0" />
@@ -158,8 +240,8 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
       <path d="M0 645 Q 400 618 800 638 T 1600 632 V 900 H 0 Z" fill="url(#outGround)" />
 
       {/* Lichtschijn van de ramen op de sneeuw */}
-      <ellipse cx="685" cy="668" rx="80" ry="14" fill="#ffcf70" opacity="0.25" />
-      <ellipse cx="915" cy="668" rx="80" ry="14" fill="#ffcf70" opacity="0.25" />
+      <ellipse cx="678" cy="668" rx="80" ry="14" fill="#ffcf70" opacity="0.25" />
+      <ellipse cx="922" cy="668" rx="80" ry="14" fill="#ffcf70" opacity="0.25" />
 
       {/* Pad naar de deur met voetstappen */}
       <path d="M772 646 L 828 646 L 980 900 L 620 900 Z" fill="#c6d4e8" />
@@ -167,43 +249,108 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
         <ellipse key={i} cx={f.x} cy={f.y} rx={4 * f.s} ry={7 * f.s} fill="#a9bbd6" />
       ))}
 
-      {/* Het huis */}
+      {/* Het huis: een alpenchalet / blokhut */}
       <g>
-        {/* Schoorsteen met rook */}
-        <rect x="900" y="300" width="42" height="90" fill="#7a4a3a" />
-        <path d="M900 318 H 942 M900 338 H 942 M900 358 H 942 M921 300 V 318 M911 318 V 338 M931 318 V 338 M921 338 V 358" stroke="#5c3a2e" strokeWidth="2" />
-        <rect x="895" y="292" width="52" height="12" rx="6" fill="#f4f8ff" />
+        {/* Stenen schoorsteen met rook (onderkant verdwijnt achter het dak) */}
+        <rect x="902" y="268" width="44" height="90" fill="#7c8592" />
+        {[0, 1, 2, 3, 4].map((r) =>
+          [0, 1, 2].map((c) => (
+            <rect
+              key={`${r}-${c}`}
+              x={902 + c * 15 - (r % 2) * 7 + 1}
+              y={270 + r * 14}
+              width="13"
+              height="12"
+              rx="4"
+              fill={['#8d96a3', '#9aa3af', '#7f8894'][(r + c) % 3]}
+            />
+          )),
+        )}
+        <rect x="896" y="262" width="56" height="9" rx="2" fill="#5f6772" />
+        <rect x="893" y="254" width="62" height="11" rx="5.5" fill="#f4f8ff" />
         {[0, 1, 2].map((i) => (
-          <circle key={i} className="out-smoke" cx="921" cy="282" r={12 + i * 3} style={{ '--delay': `${i * 1.3}s` }} />
+          <circle key={i} className="out-smoke" cx="924" cy="244" r={12 + i * 3} style={{ '--delay': `${i * 1.3}s` }} />
         ))}
 
-        {/* Gevel en muren */}
-        <path d="M600 442 L 800 302 L 1000 442 Z" fill="#8e3b2f" />
-        <rect x="600" y="440" width="400" height="200" fill="#8e3b2f" />
+        {/* Gevel: verticale planken */}
+        <path d="M604 452 L 800 288 L 996 452 Z" fill="#5e3b24" />
         <g clipPath="url(#outHouseClip)">
-          {Array.from({ length: 14 }, (_, i) => {
-            const y = 320 + i * 23
-            return <line key={i} x1="600" y1={y} x2="1000" y2={y} stroke="#7a3127" strokeWidth="2" />
-          })}
+          {Array.from({ length: 22 }, (_, i) => (
+            <line key={i} x1={610 + i * 18} y1="280" x2={610 + i * 18} y2="452" stroke="#4a2d1b" strokeWidth="3" />
+          ))}
         </g>
+
+        {/* Uitstekende balkkoppen onder het dak */}
+        {[[640, 404], [700, 360], [900, 360], [960, 404], [800, 292]].map(([x, y], i) => (
+          <g key={i}>
+            <rect x={x - 8} y={y} width="16" height="13" fill="#3f2616" />
+            <rect x={x - 5} y={y + 3} width="10" height="7" fill="#6b4429" />
+          </g>
+        ))}
+
+        {/* Zolderraam met luiken */}
+        <ChaletWindow x={776} y={334} w={48} h={52} shutter={14} box={false}>
+          <path d="M800 334 V 386 M776 360 H 824" stroke="#f5ecd9" strokeWidth="4" />
+        </ChaletWindow>
+
+        {/* Balkonnetje met uitgezaagde planken */}
+        <rect x="716" y="402" width="168" height="26" fill="#3f2616" />
+        {Array.from({ length: 14 }, (_, i) => {
+          const x = 720 + i * 11.6
+          return (
+            <g key={i}>
+              <rect x={x} y="400" width="10" height="28" fill="#9a6438" />
+              <circle cx={x + 5} cy="414" r="2.4" fill="#3f2616" />
+            </g>
+          )
+        })}
+        <rect x="712" y="396" width="176" height="7" fill="#7a4a28" />
+        <rect x="709" y="390" width="182" height="8" rx="4" fill="#f4f8ff" />
+        <rect x="712" y="428" width="176" height="7" fill="#4a2c1a" />
 
         {/* Houten balk waar het dak begint */}
         <rect x="592" y="434" width="416" height="18" rx="2" fill="#5e2a20" />
         <line x1="594" y1="437" x2="1006" y2="437" stroke="#74352a" strokeWidth="2" />
         <line x1="592" y1="452" x2="1008" y2="452" stroke="#4a2019" strokeWidth="2" />
 
-        {/* Rond zolderraampje */}
-        <circle cx="800" cy="388" r="21" fill="url(#outWindow)" stroke="#f5ecd9" strokeWidth="5" />
-        <path d="M800 367 V 409 M779 388 H 821" stroke="#f5ecd9" strokeWidth="3" />
+        {/* Muren van liggende boomstammen */}
+        {LOGS.map((y, i) => (
+          <g key={i}>
+            <rect x="604" y={y} width="392" height="20" fill="#9a6438" />
+            <rect x="604" y={y + 3} width="392" height="4" fill="#b47a48" opacity="0.7" />
+            <line x1="604" y1={y + 19} x2="996" y2={y + 19} stroke="#5e3a20" strokeWidth="2" />
+          </g>
+        ))}
+        {/* Kopse kanten van de stammen op de hoeken */}
+        {LOGS.map((y, i) =>
+          [600 - (i % 2) * 4, 1000 + (i % 2) * 4].map((cx) => (
+            <g key={`${i}-${cx}`}>
+              <circle cx={cx} cy={y + 10} r="10" fill="#c08a55" stroke="#7a4a28" strokeWidth="1.5" />
+              <circle cx={cx} cy={y + 10} r="5" fill="none" stroke="#9a6438" strokeWidth="1.2" />
+            </g>
+          )),
+        )}
 
-        {/* Dak met sneeuw */}
-        <path d="M550 460 L 800 280 L 800 312 L 585 460 Z" fill="#3b2622" />
-        <path d="M1050 460 L 800 280 L 800 312 L 1015 460 Z" fill="#3b2622" />
-        <path d="M546 458 L 800 274 L 1054 458" fill="none" stroke="#f4f8ff" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
-        {[600, 650, 700, 750, 850, 900, 950, 1000].map((x, i) => {
-          const y = x < 800 ? 458 - (x - 546) * 0.724 : 458 - (1054 - x) * 0.724
-          return <circle key={i} cx={x} cy={y + 8} r={i % 2 ? 5 : 7} fill="#f4f8ff" />
-        })}
+        {/* Stenen fundering */}
+        <rect x="596" y="612" width="408" height="32" fill="#5f6772" />
+        {STONES.map((s, i) => (
+          <rect key={i} x={s.x} y={s.y} width={s.w} height="14" rx="5" fill={s.fill} />
+        ))}
+
+        {/* Dak met diepe overstek */}
+        <path d="M514 474 L 800 256 L 1086 474 L 1052 474 L 800 288 L 548 474 Z" fill="#3a2418" />
+        <path d="M548 474 L 800 288 L 1052 474" fill="none" stroke="#5a3a26" strokeWidth="3" />
+
+        {/* Dikke laag sneeuw op het dak */}
+        <path d="M508 476 L 800 250 L 1092 476" fill="none" stroke="#cfdcef" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M506 468 L 800 242 L 1094 468" fill="none" stroke="#f4f8ff" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+        {ROOF_SNOW.map((b, i) => (
+          <circle key={i} cx={b.x} cy={b.y} r={b.r} fill="#f4f8ff" />
+        ))}
+        <ellipse cx="510" cy="478" rx="13" ry="8" fill="#f4f8ff" />
+        <ellipse cx="1090" cy="478" rx="13" ry="8" fill="#f4f8ff" />
+        <Icicles x1={500} x2={548} y={482} n={4} seed={1400} />
+        <Icicles x1={1052} x2={1100} y={482} n={4} seed={1450} />
 
         {/* Lichtjes langs het dak */}
         {ROOF_LIGHTS.map((l, i) => (
@@ -214,49 +361,65 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
         ))}
 
         {/* Linkerraam met een ster */}
-        <rect x="640" y="480" width="90" height="85" fill="url(#outWindow)" />
-        <path
-          d="M685 497 L 690 508 L 702 508 L 692 515 L 696 527 L 685 520 L 674 527 L 678 515 L 668 508 L 680 508 Z"
-          fill="#ffd45c"
-          stroke="#e0a800"
-          strokeWidth="1.5"
-        />
-        <line x1="685" y1="480" x2="685" y2="497" stroke="#8a6a45" strokeWidth="1.5" />
-        <rect x="640" y="480" width="90" height="85" fill="none" stroke="#f5ecd9" strokeWidth="6" />
-        <path d="M685 480 V 565 M640 522 H 730" stroke="#f5ecd9" strokeWidth="5" />
-        <rect x="632" y="563" width="106" height="10" rx="5" fill="#f4f8ff" />
+        <ChaletWindow x={642} y={486} w={72} h={74}>
+          <line x1="678" y1="486" x2="678" y2="503" stroke="#8a6a45" strokeWidth="1.5" />
+          <path
+            d="M678 503 L 683 514 L 695 514 L 685 521 L 689 533 L 678 526 L 667 533 L 671 521 L 661 514 L 673 514 Z"
+            fill="#ffd45c"
+            stroke="#e0a800"
+            strokeWidth="1.5"
+          />
+        </ChaletWindow>
 
         {/* Rechterraam met de kerstboom binnen */}
-        <rect x="870" y="480" width="90" height="85" fill="url(#outWindow)" />
-        <path d="M915 492 L 942 565 L 888 565 Z" fill="#1d5e3a" />
-        {[[908, 520], [922, 532], [904, 548], [926, 552], [915, 505]].map(([x, y], i) => (
-          <circle key={i} className="out-light" cx={x} cy={y} r="2.5" fill={LIGHT_COLORS[i]} style={{ '--delay': `${i * 0.4}s` }} />
-        ))}
-        <rect x="870" y="480" width="90" height="85" fill="none" stroke="#f5ecd9" strokeWidth="6" />
-        <path d="M915 480 V 565 M870 522 H 960" stroke="#f5ecd9" strokeWidth="5" />
-        <rect x="862" y="563" width="106" height="10" rx="5" fill="#f4f8ff" />
+        <ChaletWindow x={886} y={486} w={72} h={74}>
+          <path d="M922 498 L 946 560 L 898 560 Z" fill="#1d5e3a" />
+          {[[916, 524], [928, 536], [910, 548], [934, 552], [922, 512]].map(([x, y], i) => (
+            <circle key={i} className="out-light" cx={x} cy={y} r="2.5" fill={LIGHT_COLORS[i]} style={{ '--delay': `${i * 0.4}s` }} />
+          ))}
+        </ChaletWindow>
 
-        {/* Voordeur */}
+        {/* Deurkozijn en afdakje */}
+        <rect x="764" y="530" width="72" height="112" rx="3" fill="#3f2616" />
+        <path d="M762 548 L 752 532 M838 548 L 848 532" stroke="#3a2418" strokeWidth="5" strokeLinecap="round" />
+        <path d="M742 532 L 800 498 L 858 532 L 850 536 L 800 507 L 750 536 Z" fill="#3a2418" />
+        <path d="M740 528 L 800 493 L 860 528" fill="none" stroke="#f4f8ff" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+        <Icicles x1={742} x2={762} y={536} n={2} seed={1500} />
+        <Icicles x1={838} x2={858} y={536} n={2} seed={1520} />
+
+        {/* Voordeur: houten planken, smeedijzeren scharnieren en een krans */}
         <g className="out-door" onClick={onDoorClick} role="button" tabIndex={0} aria-label="Voordeur"
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onDoorClick()}>
-          <path d="M770 640 V 548 Q 800 516 830 548 V 640 Z" fill="#2e6b3f" stroke="#f5ecd9" strokeWidth="5" />
-          <path d="M786 560 V 625 M814 560 V 625" stroke="#265a35" strokeWidth="3" />
-          <circle cx="800" cy="566" r="13" fill="none" stroke="#1d5e3a" strokeWidth="7" />
-          <circle cx="792" cy="557" r="2.5" fill="#e53935" />
-          <circle cx="809" cy="560" r="2.5" fill="#e53935" />
-          <path d="M800 578 L 792 586 L 800 583 L 808 586 Z" fill="#e53935" />
-          <circle cx="821" cy="602" r="3" fill="#d4af37" />
+          <rect x="772" y="538" width="56" height="102" rx="2" fill="#8a5530" />
+          <path d="M786 538 V 640 M800 538 V 640 M814 538 V 640" stroke="#6e4426" strokeWidth="2" />
+          <path d="M772 556 H 812 L 818 552 M772 622 H 812 L 818 618" stroke="#2b2b2b" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="800" cy="580" r="13" fill="none" stroke="#1d5e3a" strokeWidth="7" />
+          <circle cx="792" cy="571" r="2.5" fill="#e53935" />
+          <circle cx="809" cy="574" r="2.5" fill="#e53935" />
+          <path d="M800 592 L 792 600 L 800 597 L 808 600 Z" fill="#e53935" />
+          <circle cx="820" cy="604" r="3.5" fill="#2b2b2b" />
         </g>
-        <rect x="752" y="638" width="96" height="10" rx="3" fill="#dfe8f5" />
+        <rect x="752" y="638" width="96" height="10" rx="3" fill="#9aa3af" />
+        <rect x="754" y="636" width="92" height="4" rx="2" fill="#f4f8ff" />
 
         {/* Lantaarntje naast de deur */}
-        <circle cx="856" cy="548" r="55" fill="url(#outWarmGlow)" />
-        <rect x="849" y="538" width="14" height="20" rx="2" fill="#ffe2a6" stroke="#2b2b2b" strokeWidth="2.5" />
-        <path d="M847 538 L 856 530 L 865 538 Z" fill="#2b2b2b" />
+        <circle cx="850" cy="566" r="50" fill="url(#outWarmGlow)" />
+        <path d="M850 548 V 554" stroke="#2b2b2b" strokeWidth="2" />
+        <rect x="843" y="556" width="14" height="20" rx="2" fill="#ffe2a6" stroke="#2b2b2b" strokeWidth="2.5" />
+        <path d="M841 556 L 850 548 L 859 556 Z" fill="#2b2b2b" />
+
+        {/* Houtstapel tegen de muur */}
+        {WOODPILE.map(([x, y], i) => (
+          <g key={i}>
+            <circle cx={x} cy={y} r="8" fill="#c08a55" stroke="#6e4426" strokeWidth="1.5" />
+            <circle cx={x} cy={y} r="3.5" fill="none" stroke="#9a6438" strokeWidth="1" />
+          </g>
+        ))}
+        <ellipse cx="1038" cy="592" rx="22" ry="5" fill="#f4f8ff" />
 
         {/* Sneeuw tegen de muur */}
-        <path d="M590 646 Q 620 628 660 640 Q 700 630 740 642 L 752 646 Z" fill="#f4f8ff" />
-        <path d="M848 646 Q 880 630 920 640 Q 960 628 1010 646 Z" fill="#f4f8ff" />
+        <path d="M584 648 Q 620 630 660 640 Q 700 630 740 642 L 752 648 Z" fill="#f4f8ff" />
+        <path d="M848 648 Q 880 632 920 640 Q 960 628 1074 648 Z" fill="#f4f8ff" />
       </g>
 
       {/* Lantaarnpalen langs het pad */}

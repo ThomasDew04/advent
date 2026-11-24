@@ -77,9 +77,20 @@ function App() {
         onSelectDay={selectDay}
       />
 
-      {zoomed && (
-        <button className="back-button" onClick={() => setZoomed(false)}>
+      {zoomed ? (
+        <button key="kamer" className="back-button" onClick={() => setZoomed(false)}>
           ← Terug naar de kamer
+        </button>
+      ) : (
+        <button
+          key="buiten"
+          className="back-button"
+          onClick={() => {
+            setWalking(false)
+            setInside(false)
+          }}
+        >
+          ← Naar buiten
         </button>
       )}
 
