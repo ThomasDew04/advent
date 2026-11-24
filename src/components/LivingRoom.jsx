@@ -60,12 +60,57 @@ const WALL_LIGHTS = WALL_GARLAND.flatMap((seg, s) =>
   }),
 )
 
+// Cadeautjes: eerst de achterste, dan de voorste. tilt = graden scheef.
 const PRESENTS = [
-  { x: 1120, y: 600, w: 80, h: 55, box: '#b03a2e', ribbon: '#f4d03f' },
-  { x: 1205, y: 615, w: 60, h: 40, box: '#1e8449', ribbon: '#fdfefe' },
-  { x: 1350, y: 595, w: 90, h: 60, box: '#2874a6', ribbon: '#e74c3c' },
-  { x: 1445, y: 612, w: 65, h: 45, box: '#d4ac0d', ribbon: '#922b21' },
+  { x: 1266, y: 578, w: 76, h: 67, box: '#8e44ad', ribbon: '#f4d03f', tilt: 0 },
+  { x: 1108, y: 605, w: 80, h: 55, box: '#b03a2e', ribbon: '#f4d03f', tilt: -6 },
+  { x: 1218, y: 620, w: 56, h: 40, box: '#1e8449', ribbon: '#fdfefe', tilt: 0 },
+  { x: 1350, y: 602, w: 88, h: 58, box: '#2874a6', ribbon: '#e74c3c', tilt: 5 },
+  { x: 1470, y: 616, w: 62, h: 44, box: '#d4ac0d', ribbon: '#922b21', tilt: -8 },
 ]
+
+// Kleur lichter (amount > 0) of donkerder (amount < 0) maken
+const shade = (hex, amount) => {
+  const n = parseInt(hex.slice(1), 16)
+  const ch = (v) => Math.round(amount > 0 ? v + (255 - v) * amount : v * (1 + amount))
+  const r = ch(n >> 16)
+  const g = ch((n >> 8) & 255)
+  const b = ch(n & 255)
+  return `rgb(${r} ${g} ${b})`
+}
+
+function Present({ x, y, w, h, box, ribbon, tilt }) {
+  const dx = Math.min(w * 0.28, 22)
+  const dy = -dx * 0.65
+  const midX = x + w / 2
+  const midY = y + h / 2
+  const pts = (...p) => p.map(([px, py]) => `${px},${py}`).join(' ')
+
+  return (
+    <g transform={`rotate(${tilt} ${midX} ${y + h})`}>
+      {/* Zijvlak en bovenvlak */}
+      <polygon points={pts([x + w, y], [x + w + dx, y + dy], [x + w + dx, y + h + dy], [x + w, y + h])} fill={shade(box, -0.35)} />
+      <polygon points={pts([x, y], [x + dx, y + dy], [x + w + dx, y + dy], [x + w, y])} fill={shade(box, 0.25)} />
+      {/* Voorvlak */}
+      <rect x={x} y={y} width={w} height={h} fill={box} />
+
+      {/* Lint over voorvlak, zijvlak en bovenvlak */}
+      <rect x={midX - 5} y={y} width="10" height={h} fill={ribbon} />
+      <rect x={x} y={midY - 4} width={w} height="8" fill={ribbon} />
+      <polygon
+        points={pts([x + w, midY - 4], [x + w + dx, midY - 4 + dy], [x + w + dx, midY + 4 + dy], [x + w, midY + 4])}
+        fill={shade(ribbon, -0.3)}
+      />
+      <line x1={midX} y1={y} x2={midX + dx} y2={y + dy} stroke={shade(ribbon, 0.15)} strokeWidth="9" />
+      <line x1={x + dx / 2} y1={y + dy / 2} x2={x + w + dx / 2} y2={y + dy / 2} stroke={shade(ribbon, 0.15)} strokeWidth="6" />
+
+      {/* Strik bovenop */}
+      <ellipse cx={midX + dx / 2 - 9} cy={y + dy / 2 - 5} rx="10" ry="6" fill={ribbon} transform={`rotate(-15 ${midX + dx / 2 - 9} ${y + dy / 2 - 5})`} />
+      <ellipse cx={midX + dx / 2 + 9} cy={y + dy / 2 - 5} rx="10" ry="6" fill={ribbon} transform={`rotate(15 ${midX + dx / 2 + 9} ${y + dy / 2 - 5})`} />
+      <circle cx={midX + dx / 2} cy={y + dy / 2 - 3} r="4.5" fill={shade(ribbon, -0.2)} />
+    </g>
+  )
+}
 
 const STOCKINGS = [
   { x: 690, color: '#b03a2e' },
@@ -261,8 +306,9 @@ function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay
         <line x1="1665" y1="438" x2="1665" y2="462" stroke="#2b2b2b" strokeWidth="2" />
 
         {/* Kerstster in een pot */}
-        <path d="M1735 488 h 50 l -6 32 h -38 z" fill="#c62828" />
-        <rect x="1731" y="482" width="58" height="10" rx="3" fill="#e53935" />
+        <path d="M1735 488 h 50 l -6 32 h -38 z" fill="#efe3cf" />
+        <path d="M1737 500 h 46 l -1 6 h -44 z" fill="#d4af37" />
+        <rect x="1731" y="482" width="58" height="10" rx="3" fill="#d4af37" />
         {Array.from({ length: 6 }, (_, i) => {
           const deg = i * 60 - 90
           return (
@@ -434,7 +480,7 @@ function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay
         />
 
         {/* Ster */}
-        <g className="star" transform={`translate(${TREE_X} 112)`}>
+        <g className="star" transform={`translate(${TREE_X} 113)`}>
           <circle r="34" fill="url(#lightHalo)" opacity="0.5" />
           <path
             d="M0 -28 L 8 -9 L 28 -9 L 12 4 L 18 24 L 0 12 L -18 24 L -12 4 L -28 -9 L -8 -9 Z"
@@ -447,13 +493,7 @@ function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay
 
       {/* Cadeautjes */}
       {PRESENTS.map((p, i) => (
-        <g key={i}>
-          <rect x={p.x} y={p.y} width={p.w} height={p.h} rx="3" fill={p.box} />
-          <rect x={p.x + p.w / 2 - 5} y={p.y} width="10" height={p.h} fill={p.ribbon} />
-          <rect x={p.x} y={p.y + p.h / 2 - 4} width={p.w} height="8" fill={p.ribbon} opacity="0.9" />
-          <ellipse cx={p.x + p.w / 2 - 9} cy={p.y - 4} rx="10" ry="6" fill={p.ribbon} />
-          <ellipse cx={p.x + p.w / 2 + 9} cy={p.y - 4} rx="10" ry="6" fill={p.ribbon} />
-        </g>
+        <Present key={i} {...p} />
       ))}
 
       {/* Bordje op een paaltje */}

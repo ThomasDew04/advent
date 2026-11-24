@@ -1,12 +1,14 @@
 // Tot welke dag mogen de luikjes open?
 // In december: tot en met vandaag. Buiten december: nog niets.
-// Om te testen kun je ?dag=10 aan de URL toevoegen.
+// Tijdens ontwikkelen (npm run dev) zijn alle luikjes open.
+// Om het slot te testen kun je ?dag=10 aan de URL toevoegen (werkt ook tijdens ontwikkelen).
 export function getUnlockedUntil(now = new Date()) {
   const override = new URLSearchParams(window.location.search).get('dag')
   if (override !== null) {
     const day = Number(override)
     if (Number.isFinite(day)) return Math.max(0, Math.min(25, Math.floor(day)))
   }
+  if (import.meta.env.DEV) return 25
   if (now.getMonth() === 11) return Math.min(25, now.getDate())
   return 0
 }
