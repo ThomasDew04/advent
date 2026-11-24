@@ -1,0 +1,176 @@
+.outside {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+.out-star {
+  fill: #fff;
+  animation: out-twinkle 3.5s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-twinkle {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.out-flake {
+  fill: #fff;
+  opacity: 0.85;
+  animation: out-fall var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-fall {
+  to {
+    transform: translate(var(--drift), 960px);
+  }
+}
+
+.out-smoke {
+  fill: #cfd8e6;
+  opacity: 0;
+  animation: out-smoke 4s ease-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  20% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-40px, -130px) scale(1.8);
+  }
+}
+.out-smoke {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.out-light {
+  animation: out-blink 2.5s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Decoratieve gloed en sneeuw mogen geen klikken opvangen */
+.outside circle[fill^='url(#out'],
+.outside ellipse,
+.out-flake,
+.out-smoke {
+  pointer-events: none;
+}
+
+.out-door {
+  cursor: pointer;
+  outline: none;
+}
+.out-door:hover,
+.out-door:focus-visible {
+  filter: brightness(1.2) drop-shadow(0 0 6px #ffe9a8);
+}
+
+.out-sign-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 25px;
+  font-weight: bold;
+  font-style: italic;
+  fill: #fdf3dc;
+}
+
+/* POV: drie stappen richting de voordeur, met een licht op-en-neer wiegen per stap */
+.out-world {
+  transform-box: view-box;
+  transform-origin: 800px 590px;
+}
+.outside--walking {
+  pointer-events: none;
+}
+.outside--walking .out-door {
+  filter: none;
+}
+.outside--walking .out-world {
+  animation: out-walk 2.7s forwards;
+}
+@keyframes out-walk {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    animation-timing-function: ease-in;
+  }
+  /* stap 1 */
+  15% {
+    transform: translate(-8px, 14px) rotate(-0.6deg) scale(1.14);
+    animation-timing-function: ease-out;
+  }
+  30% {
+    transform: translate(0, 0) rotate(0deg) scale(1.32);
+    animation-timing-function: ease-in;
+  }
+  /* stap 2 */
+  45% {
+    transform: translate(8px, 14px) rotate(0.6deg) scale(1.55);
+    animation-timing-function: ease-out;
+  }
+  60% {
+    transform: translate(0, 0) rotate(0deg) scale(1.82);
+    animation-timing-function: ease-in;
+  }
+  /* stap 3 */
+  75% {
+    transform: translate(-6px, 12px) rotate(-0.5deg) scale(2.2);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(3.4);
+  }
+}
+
+.out-fade {
+  fill: #1a0f0a;
+  opacity: 0;
+  pointer-events: none;
+  animation: out-fade-in 2.7s ease-in forwards;
+}
+@keyframes out-fade-in {
+  0%,
+  72% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outside--walking .out-world {
+    animation: none;
+  }
+  .out-fade {
+    animation-duration: 0.6s;
+  }
+  .out-star,
+  .out-flake,
+  .out-smoke,
+  .out-light {
+    animation: none;
+  }
+  .out-flake {
+    display: none;
+  }
+}

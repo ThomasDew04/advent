@@ -1,7 +1,8 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import LivingRoom from './components/LivingRoom.jsx'
 import DoorModal from './components/DoorModal.jsx'
-import { getToday, getUnlockedUntil } from './utils/calendar.js'
+import OutsideScene from './components/OutsideScene.jsx'
+import { daysUntilDecember, getToday, getUnlockedUntil, isDoorUnlocked, isInside } from './utils/calendar.js'
 import './App.css'
 
 function App() {
@@ -10,6 +11,9 @@ function App() {
   const [wiggle, setWiggle] = useState({ day: null, n: 0 })
   const [toast, setToast] = useState(null)
 
+  const [inside, setInside] = useState(() => isInside())
+  const [walking, setWalking] = useState(false)
+  const daysLeft = useMemo(() => daysUntilDecember(), [])
   const unlockedUntil = useMemo(() => getUnlockedUntil(), [])
   const today = useMemo(() => getToday(unlockedUntil), [unlockedUntil])
 
@@ -39,6 +43,28 @@ function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [openDay, zoomed])
+
+  if (!inside) {
+    return (
+      <>
+        <OutsideScene
+          daysLeft={daysLeft}
+          walking={walking}
+          onWalkEnd={() => setInside(true)}
+          onDoorClick={() => {
+            if (walking) return
+            if (isDoorUnlocked()) setWalking(true)
+            else setToast({ text: 'De deur is nog op slot… Op 1 december mag je binnen!', id: Date.now() })
+          }}
+        />
+        {toast && (
+          <div key={toast.id} className="toast" role="status">
+            {toast.text}
+          </div>
+        )}
+      </>
+    )
+  }
 
   return (
     <>

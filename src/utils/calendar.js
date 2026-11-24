@@ -1,3 +1,28 @@
+const params = () => new URLSearchParams(window.location.search)
+
+// Staan we binnen (december) of buiten voor het huis te wachten?
+// Om te testen: ?december (of ?dag=N) gaat naar binnen, ?buiten blijft buiten.
+export function isInside(now = new Date()) {
+  const p = params()
+  if (p.has('buiten')) return false
+  if (p.has('december') || p.has('dag')) return true
+  return now.getMonth() === 11
+}
+
+// Mag je voor december al binnen via de voordeur?
+// Voorlopig alleen tijdens ontwikkelen (npm run dev).
+export function isDoorUnlocked() {
+  return import.meta.env.DEV
+}
+
+// Aantal dagen tot de eerstvolgende 1 december
+export function daysUntilDecember(now = new Date()) {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const year = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear()
+  const firstDecember = new Date(year, 11, 1)
+  return Math.round((firstDecember - today) / 86400000)
+}
+
 // Tot welke dag mogen de luikjes open?
 // In december: tot en met vandaag. Buiten december: nog niets.
 // Tijdens ontwikkelen (npm run dev) zijn alle luikjes open.
