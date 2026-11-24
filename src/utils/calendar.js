@@ -9,10 +9,10 @@ export function isInside(now = new Date()) {
   return now.getMonth() === 11
 }
 
-// Mag je voor december al binnen via de voordeur?
-// Voorlopig alleen tijdens ontwikkelen (npm run dev).
-export function isDoorUnlocked() {
-  return import.meta.env.DEV
+// Gaat de voordeur open? Pas vanaf december (dan kun je ook terug naar buiten en weer binnen).
+// Om binnen te testen voor december: ?december aan de URL toevoegen.
+export function isDoorUnlocked(now = new Date()) {
+  return now.getMonth() === 11
 }
 
 // Aantal dagen tot de eerstvolgende 1 december

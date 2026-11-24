@@ -68,13 +68,16 @@ const WALL_LIGHTS = WALL_GARLAND.flatMap((seg, s) =>
   }),
 )
 
-// Cadeautjes: eerst de achterste, dan de voorste. tilt = graden scheef.
+// Cadeautjes: eerst de achterste rij, dan de voorste. tilt = graden scheef.
+// De strikken blijven onder de onderste rij kerstballen (onderkant y ≈ 575).
 const PRESENTS = [
-  { x: 1266, y: 578, w: 76, h: 67, box: '#8e44ad', ribbon: '#f4d03f', tilt: 0 },
-  { x: 1108, y: 605, w: 80, h: 55, box: '#b03a2e', ribbon: '#f4d03f', tilt: -6 },
-  { x: 1218, y: 620, w: 56, h: 40, box: '#1e8449', ribbon: '#fdfefe', tilt: 0 },
-  { x: 1350, y: 602, w: 88, h: 58, box: '#2874a6', ribbon: '#e74c3c', tilt: 5 },
-  { x: 1470, y: 616, w: 62, h: 44, box: '#d4ac0d', ribbon: '#922b21', tilt: -8 },
+  // achteraan
+  { x: 1112, y: 600, w: 84, h: 58, box: '#b03a2e', ribbon: '#f4d03f', tilt: -4 },
+  { x: 1262, y: 597, w: 72, h: 66, box: '#8e44ad', ribbon: '#f4d03f', tilt: 0 },
+  { x: 1392, y: 601, w: 86, h: 56, box: '#2874a6', ribbon: '#e74c3c', tilt: 4 },
+  // vooraan
+  { x: 1196, y: 636, w: 56, h: 40, box: '#1e8449', ribbon: '#fdfefe', tilt: 3 },
+  { x: 1338, y: 640, w: 62, h: 42, box: '#d4ac0d', ribbon: '#922b21', tilt: -7 },
 ]
 
 // Kleur lichter (amount > 0) of donkerder (amount < 0) maken
