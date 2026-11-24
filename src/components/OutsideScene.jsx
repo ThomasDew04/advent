@@ -121,6 +121,26 @@ function Pine({ x, base, h, color, snow = '#f4f8ff' }) {
   )
 }
 
+// Eenvoudig houten hekje met sneeuw op de palen en de bovenste lat
+function Fence({ x1, x2, base }) {
+  const posts = []
+  for (let x = x1; x <= x2; x += 46) posts.push(x)
+  return (
+    <g>
+      {[base - 24, base - 12].map((y) => (
+        <line key={y} x1={x1} y1={y} x2={x2} y2={y} stroke="#5b3a24" strokeWidth="5" strokeLinecap="round" />
+      ))}
+      <line x1={x1} y1={base - 27} x2={x2} y2={base - 27} stroke="#f4f8ff" strokeWidth="3" strokeLinecap="round" />
+      {posts.map((x) => (
+        <g key={x}>
+          <rect x={x - 4} y={base - 34} width="8" height="36" rx="1.5" fill="#4a2f1d" />
+          <ellipse cx={x} cy={base - 34} rx="6" ry="3.5" fill="#f4f8ff" />
+        </g>
+      ))}
+    </g>
+  )
+}
+
 // IJspegels die van een rand naar beneden hangen
 function Icicles({ x1, x2, y, n, seed }) {
   return (
@@ -208,6 +228,10 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
         <clipPath id="outHouseClip">
           <path d="M604 452 L 800 288 L 996 452 Z" />
         </clipPath>
+        <linearGradient id="outShoot" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="90" y2="0">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="1" stopColor="#fff" stopOpacity="1" />
+        </linearGradient>
         <radialGradient id="outVignette" cx="50%" cy="50%" r="75%">
           <stop offset="0.6" stopColor="#000" stopOpacity="0" />
           <stop offset="1" stopColor="#000" stopOpacity="0.5" />
@@ -226,6 +250,11 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
       <circle cx="1276" cy="140" r="8" fill="#ece3bf" />
       <circle cx="1302" cy="166" r="5" fill="#ece3bf" />
 
+      {/* Af en toe een vallende ster */}
+      <g className="out-shooting">
+        <line x1="0" y1="0" x2="90" y2="0" stroke="url(#outShoot)" strokeWidth="2.5" strokeLinecap="round" />
+      </g>
+
       {/* Verre heuvel en bomen */}
       <path d="M0 600 Q 300 560 620 588 T 1220 578 T 1600 588 V 900 H 0 Z" fill="#b9c9e2" />
       {FAR_TREES.map((t, i) => (
@@ -238,6 +267,10 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
 
       {/* Besneeuwde grond */}
       <path d="M0 645 Q 400 618 800 638 T 1600 632 V 900 H 0 Z" fill="url(#outGround)" />
+
+      {/* Houten hekjes in de sneeuw */}
+      <Fence x1={-20} x2={270} base={684} />
+      <Fence x1={1180} x2={1620} base={680} />
 
       {/* Lichtschijn van de ramen op de sneeuw */}
       <ellipse cx="678" cy="668" rx="80" ry="14" fill="#ffcf70" opacity="0.25" />
@@ -461,6 +494,30 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
         ))}
         {/* Armen */}
         <path d="M322 638 L 272 606 M290 617 L 278 600 M398 638 L 452 612 M436 620 L 450 600" stroke="#5b3a24" strokeWidth="5" strokeLinecap="round" />
+      </g>
+
+      {/* Brievenbus langs het pad */}
+      <g>
+        <ellipse cx="548" cy="768" rx="22" ry="4" fill="#a9bbd6" opacity="0.7" />
+        <rect x="544" y="712" width="8" height="56" fill="#4a2f1d" />
+        <path d="M522 714 V 694 Q 522 680 536 680 H 560 Q 574 680 574 694 V 714 Z" fill="#c0392b" />
+        <path d="M528 714 V 696 Q 528 686 538 686" fill="none" stroke="#a93226" strokeWidth="2" />
+        <line x1="578" y1="710" x2="578" y2="676" stroke="#2b2b2b" strokeWidth="3" strokeLinecap="round" />
+        <path d="M578 676 H 592 V 687 H 578 Z" fill="#f4d03f" />
+        <path d="M519 692 Q 520 674 538 675 H 558 Q 577 674 577 692 Q 548 684 519 692 Z" fill="#f4f8ff" />
+      </g>
+
+      {/* Slee in de sneeuw */}
+      <g>
+        <ellipse cx="215" cy="836" rx="80" ry="7" fill="#a9bbd6" opacity="0.6" />
+        <path d="M262 806 Q 300 846 340 832" fill="none" stroke="#e8d9b5" strokeWidth="2.5" strokeLinecap="round" />
+        {[168, 208, 248].map((x) => (
+          <line key={x} x1={x} y1="810" x2={x} y2="830" stroke="#7a4a28" strokeWidth="5" />
+        ))}
+        <rect x="150" y="798" width="116" height="13" rx="3" fill="#a0522d" />
+        <path d="M150 804 H 266" stroke="#7a4a28" strokeWidth="1.5" />
+        <path d="M142 832 H 262 Q 288 832 284 810" fill="none" stroke="#c0392b" strokeWidth="5" strokeLinecap="round" />
+        <path d="M152 799 Q 175 788 200 796 Q 225 786 262 798 Z" fill="#f4f8ff" />
       </g>
 
       {/* Aftelbordje */}

@@ -69,6 +69,27 @@
   }
 }
 
+.out-shooting {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  opacity: 0;
+  animation: out-shoot 11s ease-out 3s infinite;
+}
+@keyframes out-shoot {
+  0% {
+    transform: translate(260px, 80px) rotate(20deg);
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  6%,
+  100% {
+    transform: translate(620px, 211px) rotate(20deg);
+    opacity: 0;
+  }
+}
+
 /* Decoratieve gloed en sneeuw mogen geen klikken opvangen */
 .outside circle[fill^='url(#out'],
 .outside ellipse,
@@ -170,7 +191,8 @@
   .out-light {
     animation: none;
   }
-  .out-flake {
+  .out-flake,
+  .out-shooting {
     display: none;
   }
 }
