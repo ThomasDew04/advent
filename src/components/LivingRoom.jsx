@@ -1,4 +1,6 @@
 import './LivingRoom.css'
+import Baubles from './Baubles.jsx'
+import { TREE_X, TIERS } from './tree.js'
 
 // Deterministische pseudo-random zodat de scène bij elke render gelijk blijft
 const rand = (i) => {
@@ -16,14 +18,6 @@ const SNOWFLAKES = Array.from({ length: 45 }, (_, i) => ({
   delay: -rand(i + 300) * 12,
   drift: (rand(i + 400) - 0.5) * 40,
 }))
-
-// Kerstboom: drie lagen (top, basis-y, halve breedte aan de basis)
-const TREE_X = 1300
-const TIERS = [
-  { apex: 150, base: 320, half: 110 },
-  { apex: 240, base: 460, half: 170 },
-  { apex: 360, base: 610, half: 230 },
-]
 
 const LIGHT_COLORS = ['#ffd45c', '#ff5a5a', '#6ecbff', '#9cff7a', '#ff9de2']
 
@@ -49,17 +43,22 @@ const LIGHTS = TIERS.flatMap((tier, t) => {
   })
 })
 
-const BAUBLES = [
-  { x: 1270, y: 280, c: '#c0392b' },
-  { x: 1335, y: 300, c: '#d4af37' },
-  { x: 1220, y: 420, c: '#d4af37' },
-  { x: 1310, y: 400, c: '#2e86c1' },
-  { x: 1395, y: 440, c: '#c0392b' },
-  { x: 1170, y: 580, c: '#2e86c1' },
-  { x: 1265, y: 540, c: '#c0392b' },
-  { x: 1360, y: 560, c: '#d4af37' },
-  { x: 1440, y: 590, c: '#c0392b' },
+// Lichtjesslinger rechts aan de muur: twee doorhangende bogen
+const quad = (p0, p1, p2, t) => ({
+  x: (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t ** 2 * p2[0],
+  y: (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t ** 2 * p2[1],
+})
+const WALL_GARLAND = [
+  [[1530, 110], [1610, 185], [1700, 120]],
+  [[1700, 120], [1790, 185], [1880, 110]],
 ]
+const WALL_LIGHTS = WALL_GARLAND.flatMap((seg, s) =>
+  Array.from({ length: 7 }, (_, k) => {
+    const p = quad(...seg, (k + 0.5) / 7)
+    const idx = s * 7 + k
+    return { ...p, color: LIGHT_COLORS[idx % LIGHT_COLORS.length], delay: rand(idx + 900) * 2.5 }
+  }),
+)
 
 const PRESENTS = [
   { x: 1120, y: 600, w: 80, h: 55, box: '#b03a2e', ribbon: '#f4d03f' },
@@ -74,14 +73,14 @@ const STOCKINGS = [
   { x: 890, color: '#b03a2e' },
 ]
 
-function LivingRoom() {
+function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay }) {
   return (
     <svg
-      className="living-room"
+      className={`living-room ${zoomed ? 'is-zoomed' : ''}`}
       viewBox="0 0 1600 900"
       preserveAspectRatio="xMidYMid slice"
-      role="img"
       aria-label="Een gezellige woonkamer met een open haard en een versierde kerstboom"
+      onClick={() => !zoomed && onStart()}
     >
       <defs>
         <pattern id="wallpaper" width="48" height="48" patternUnits="userSpaceOnUse">
@@ -122,6 +121,11 @@ function LivingRoom() {
           <stop offset="1" stopColor="#ffe3a3" stopOpacity="0" />
         </radialGradient>
 
+        <radialGradient id="candleGlow">
+          <stop offset="0" stopColor="#ffcf73" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#ffcf73" stopOpacity="0" />
+        </radialGradient>
+
         <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
           <stop offset="0.55" stopColor="#000" stopOpacity="0" />
           <stop offset="1" stopColor="#000" stopOpacity="0.55" />
@@ -137,10 +141,12 @@ function LivingRoom() {
         </clipPath>
       </defs>
 
+      <g className="scene">
       {/* Muur en vloer */}
-      <rect width="1600" height="640" fill="url(#wallpaper)" />
-      <rect y="640" width="1600" height="260" fill="url(#planks)" />
-      <rect y="625" width="1600" height="20" fill="#3e2416" />
+      {/* Breder dan het beeld, zodat er bij het inzoomen geen lege rand zichtbaar wordt */}
+      <rect x="-800" y="-400" width="3200" height="1040" fill="url(#wallpaper)" />
+      <rect x="-800" y="640" width="3200" height="660" fill="url(#planks)" />
+      <rect x="-800" y="625" width="3200" height="20" fill="#3e2416" />
 
       {/* Raam met sneeuw */}
       <g>
@@ -188,6 +194,92 @@ function LivingRoom() {
         <rect x="726" y="196" width="148" height="108" fill="#a7c4d8" />
         <path d="M726 304 L 770 240 L 800 270 L 835 225 L 874 304 Z" fill="#e9f0f5" />
         <path d="M726 304 L 760 275 L 800 304 Z" fill="#5d8a6b" />
+      </g>
+
+      {/* Versiering rechts van de boom */}
+      <g>
+        {/* Lichtjesslinger */}
+        {WALL_GARLAND.map(([p0, p1, p2], i) => (
+          <path
+            key={i}
+            d={`M${p0[0]} ${p0[1]} Q ${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}`}
+            fill="none"
+            stroke="#2e6b3f"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+        ))}
+        {WALL_LIGHTS.map((l, i) => (
+          <g key={i} className="tree-light" style={{ '--delay': `${l.delay}s` }}>
+            <circle cx={l.x} cy={l.y + 7} r="13" fill="url(#lightHalo)" opacity="0.35" />
+            <ellipse cx={l.x} cy={l.y + 7} rx="4" ry="6" fill={l.color} />
+          </g>
+        ))}
+
+        {/* Kerstkrans */}
+        <g transform="translate(1700 290)">
+          <circle r="58" fill="none" stroke="#1d5e3a" strokeWidth="34" />
+          {Array.from({ length: 16 }, (_, i) => {
+            const a = (i / 16) * Math.PI * 2
+            return (
+              <ellipse
+                key={i}
+                cx={Math.cos(a) * 58}
+                cy={Math.sin(a) * 58}
+                rx="16"
+                ry="8"
+                fill={i % 2 ? '#2e7d4a' : '#28794a'}
+                transform={`rotate(${(a * 180) / Math.PI + 60} ${Math.cos(a) * 58} ${Math.sin(a) * 58})`}
+              />
+            )
+          })}
+          {[20, 75, 130, 200, 250, 310].map((deg, i) => {
+            const a = (deg * Math.PI) / 180
+            return <circle key={i} cx={Math.cos(a) * 60} cy={Math.sin(a) * 60} r="5" fill="#e53935" />
+          })}
+          {/* Strik */}
+          <path d="M0 52 L -30 34 L -30 70 Z" fill="#e53935" />
+          <path d="M0 52 L 30 34 L 30 70 Z" fill="#e53935" />
+          <path d="M-4 56 L -16 96 L -6 92 L 0 60 Z M4 56 L 16 96 L 6 92 L 0 60 Z" fill="#c62828" />
+          <circle cy="52" r="8" fill="#c62828" />
+        </g>
+
+        {/* Bijzettafeltje */}
+        <rect x="1610" y="520" width="210" height="14" rx="3" fill="#5b3a24" />
+        <rect x="1625" y="534" width="10" height="106" fill="#4a2c1c" />
+        <rect x="1795" y="534" width="10" height="106" fill="#4a2c1c" />
+        <rect x="1630" y="595" width="170" height="8" fill="#4a2c1c" />
+
+        {/* Lantaarn met kaars */}
+        <circle cx="1665" cy="475" r="70" fill="url(#candleGlow)" />
+        <path d="M1645 438 L 1665 418 L 1685 438 Z" fill="#2b2b2b" />
+        <circle cx="1665" cy="414" r="5" fill="none" stroke="#2b2b2b" strokeWidth="3" />
+        <rect x="1642" y="438" width="46" height="82" rx="3" fill="#ffe2a6" opacity="0.35" />
+        <rect x="1660" y="485" width="10" height="30" rx="2" fill="#fdf6e3" />
+        <path className="flame flame-3" d="M1665 468 Q 1658 478 1665 486 Q 1672 478 1665 468 Z" fill="#ffcc4d" />
+        <rect x="1642" y="438" width="46" height="82" rx="3" fill="none" stroke="#2b2b2b" strokeWidth="4" />
+        <line x1="1665" y1="438" x2="1665" y2="462" stroke="#2b2b2b" strokeWidth="2" />
+
+        {/* Kerstster in een pot */}
+        <path d="M1735 488 h 50 l -6 32 h -38 z" fill="#c62828" />
+        <rect x="1731" y="482" width="58" height="10" rx="3" fill="#e53935" />
+        {Array.from({ length: 6 }, (_, i) => {
+          const deg = i * 60 - 90
+          return (
+            <ellipse
+              key={i}
+              cx="1760"
+              cy="462"
+              rx="9"
+              ry="22"
+              fill="#e53935"
+              transform={`rotate(${deg + 90} 1760 462) translate(0 -14)`}
+            />
+          )
+        })}
+        <ellipse cx="1742" cy="478" rx="12" ry="5" fill="#2e7d4a" transform="rotate(-20 1742 478)" />
+        <ellipse cx="1778" cy="478" rx="12" ry="5" fill="#2e7d4a" transform="rotate(20 1778 478)" />
+        <circle cx="1760" cy="462" r="5" fill="#ffd45c" />
       </g>
 
       {/* Open haard */}
@@ -314,7 +406,7 @@ function LivingRoom() {
 
       {/* Kerstboom */}
       <g>
-        <rect x={TREE_X - 25} y="600" width="50" height="45" fill="#5b3a24" />
+        <rect x={TREE_X - 25} y="570" width="50" height="75" fill="#5b3a24" />
         <rect x={TREE_X - 60} y="635" width="120" height="30" rx="6" fill="#922b21" />
         {[...TIERS].reverse().map((t, i) => (
           <path
@@ -326,13 +418,6 @@ function LivingRoom() {
           />
         ))}
 
-        {BAUBLES.map((b, i) => (
-          <g key={i}>
-            <circle cx={b.x} cy={b.y} r="11" fill={b.c} />
-            <circle cx={b.x - 3.5} cy={b.y - 3.5} r="3" fill="#fff" opacity="0.55" />
-          </g>
-        ))}
-
         {LIGHTS.map((l, i) => (
           <g key={i} className="tree-light" style={{ '--delay': `${l.delay}s` }}>
             <circle cx={l.x} cy={l.y} r="14" fill="url(#lightHalo)" opacity="0.35" />
@@ -340,8 +425,16 @@ function LivingRoom() {
           </g>
         ))}
 
+        <Baubles
+          interactive={zoomed}
+          unlockedUntil={unlockedUntil}
+          today={today}
+          wiggle={wiggle}
+          onSelect={onSelectDay}
+        />
+
         {/* Ster */}
-        <g className="star" transform={`translate(${TREE_X} 142)`}>
+        <g className="star" transform={`translate(${TREE_X} 112)`}>
           <circle r="34" fill="url(#lightHalo)" opacity="0.5" />
           <path
             d="M0 -28 L 8 -9 L 28 -9 L 12 4 L 18 24 L 0 12 L -18 24 L -12 4 L -28 -9 L -8 -9 Z"
@@ -364,7 +457,7 @@ function LivingRoom() {
       ))}
 
       {/* Bordje op een paaltje */}
-      <g transform="translate(1410 710) rotate(6) scale(1.25) translate(-1450 -688)" style={{ filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.45))' }}>
+      <g className="sign" transform="translate(1410 710) rotate(6) scale(1.25) translate(-1450 -688)" style={{ filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.45))' }}>
         <rect x="1442" y="770" width="16" height="200" fill="#5b3a24" />
         <rect x="1335" y="688" width="230" height="92" rx="10" fill="#5b3a24" />
         <rect x="1343" y="696" width="214" height="76" rx="6" fill="#8b5a2b" />
@@ -381,6 +474,7 @@ function LivingRoom() {
           <tspan x="1450" y="728">Klik ergens</tspan>
           <tspan x="1450" y="758">om te beginnen</tspan>
         </text>
+      </g>
       </g>
 
       <rect width="1600" height="900" fill="url(#vignette)" pointerEvents="none" />
