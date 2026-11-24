@@ -98,6 +98,7 @@ function Baubles({ interactive, unlockedUntil, today, wiggle, onSelect }) {
             }
           >
             {isToday && <circle className="bauble-halo" cx={b.x} cy={b.y} r={RADIUS + 9} />}
+            <circle className="bauble-hit" cx={b.x} cy={b.y} r={RADIUS + 9} />
             <rect x={b.x - 4} y={b.y - RADIUS - 5} width="8" height="7" rx="1.5" fill="#b9a16b" />
             <circle cx={b.x} cy={b.y} r={RADIUS} fill={b.fill} />
             <circle cx={b.x - 5} cy={b.y - 5} r="4" fill="#fff" opacity="0.45" />

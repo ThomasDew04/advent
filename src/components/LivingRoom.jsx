@@ -1,6 +1,14 @@
+import { useRef } from 'react'
 import './LivingRoom.css'
 import Baubles from './Baubles.jsx'
 import { TREE_X, TIERS } from './tree.js'
+import { frame, isPortrait, isTouch, useAspect, useViewBox } from '../utils/framing.js'
+
+// Wat er zeker in beeld moet staan
+const FULL = { x: 0, y: 0, w: 1600, h: 900 }
+const MUST_LANDSCAPE = { x: 640, y: 90, w: 940, h: 800 } // haard, boom en bordje
+const MUST_PORTRAIT = { x: 1040, y: 80, w: 540, h: 820 } // boom en bordje
+const TREE_ZOOM = { x: 1080, y: 64, w: 440, h: 642 } // ingezoomd: de hele boom met alle ballen
 
 // Deterministische pseudo-random zodat de scène bij elke render gelijk blijft
 const rand = (i) => {
@@ -119,10 +127,18 @@ const STOCKINGS = [
 ]
 
 function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay }) {
+  const svgRef = useRef(null)
+  const aspect = useAspect()
+  const target = zoomed
+    ? frame(aspect, TREE_ZOOM)
+    : frame(aspect, isPortrait(aspect) ? MUST_PORTRAIT : MUST_LANDSCAPE, FULL)
+  useViewBox(svgRef, target, zoomed ? 'zoom' : 'room')
+
   return (
+    <>
     <svg
+      ref={svgRef}
       className={`living-room ${zoomed ? 'is-zoomed' : ''}`}
-      viewBox="0 0 1600 900"
       preserveAspectRatio="xMidYMid slice"
       aria-label="Een gezellige woonkamer met een open haard en een versierde kerstboom"
       onClick={() => !zoomed && onStart()}
@@ -171,11 +187,6 @@ function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay
           <stop offset="1" stopColor="#ffcf73" stopOpacity="0" />
         </radialGradient>
 
-        <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
-          <stop offset="0.55" stopColor="#000" stopOpacity="0" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.55" />
-        </radialGradient>
-
         <radialGradient id="lightHalo">
           <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
@@ -189,8 +200,8 @@ function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay
       <g className="scene">
       {/* Muur en vloer */}
       {/* Breder dan het beeld, zodat er bij het inzoomen geen lege rand zichtbaar wordt */}
-      <rect x="-800" y="-400" width="3200" height="1040" fill="url(#wallpaper)" />
-      <rect x="-800" y="640" width="3200" height="660" fill="url(#planks)" />
+      <rect x="-800" y="-1200" width="3200" height="1840" fill="url(#wallpaper)" />
+      <rect x="-800" y="640" width="3200" height="1400" fill="url(#planks)" />
       <rect x="-800" y="625" width="3200" height="20" fill="#3e2416" />
 
       {/* Raam met sneeuw */}
@@ -511,14 +522,14 @@ function LivingRoom({ zoomed, onStart, unlockedUntil, today, wiggle, onSelectDay
         <circle cx="1357" cy="684" r="4" fill="#c0392b" />
         <circle cx="1364" cy="690" r="4" fill="#c0392b" />
         <text className="sign-text" x="1450" textAnchor="middle">
-          <tspan x="1450" y="728">Klik ergens</tspan>
+          <tspan x="1450" y="728">{isTouch() ? 'Tik' : 'Klik'} ergens</tspan>
           <tspan x="1450" y="758">om te beginnen</tspan>
         </text>
       </g>
       </g>
-
-      <rect width="1600" height="900" fill="url(#vignette)" pointerEvents="none" />
     </svg>
+    <div className="room-vignette" />
+    </>
   )
 }
 

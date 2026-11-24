@@ -1,4 +1,35 @@
+import { useEffect, useRef } from 'react'
 import './OutsideScene.css'
+import { frame, isPortrait, reducedMotion, setViewBox, useAspect, useViewBox } from '../utils/framing.js'
+
+// Wat er zeker in beeld moet staan
+const FULL = { x: 0, y: 0, w: 1600, h: 900 }
+const MUST_LANDSCAPE = { x: 270, y: 230, w: 1140, h: 600 } // sneeuwpop, huis en bordje
+const MUST_PORTRAIT = { x: 500, y: 230, w: 600, h: 800 } // huis met het bordje eronder
+const DOOR = { x: 800, y: 590 }
+
+// POV-wandeling naar de deur: per moment hoeveel we ingezoomd zijn (s) en hoe het beeld wiegt (dx, dy)
+const WALK = [
+  { t: 0, s: 1, dx: 0, dy: 0 },
+  { t: 0.15, s: 1.14, dx: -8, dy: 14 },
+  { t: 0.3, s: 1.32, dx: 0, dy: 0 },
+  { t: 0.45, s: 1.55, dx: 8, dy: 14 },
+  { t: 0.6, s: 1.82, dx: 0, dy: 0 },
+  { t: 0.75, s: 2.2, dx: -6, dy: 12 },
+  { t: 1, s: 3.4, dx: 0, dy: 0 },
+]
+const WALK_MS = 2700
+
+function walkAt(p) {
+  const i = Math.min(WALK.length - 2, WALK.findIndex((k) => k.t > p) - 1)
+  const a = WALK[Math.max(0, i)]
+  const b = WALK[Math.max(0, i) + 1]
+  const t = Math.min(1, Math.max(0, (p - a.t) / (b.t - a.t)))
+  // afwisselend versnellen (voet omhoog) en vertragen (voet neer)
+  const e = i % 2 === 0 ? t * t : 1 - (1 - t) * (1 - t)
+  const mix = (k) => a[k] + (b[k] - a[k]) * e
+  return { s: mix('s'), dx: mix('dx'), dy: mix('dy') }
+}
 
 // Deterministische pseudo-random zodat de scène bij elke render gelijk blijft
 const rand = (i) => {
@@ -6,9 +37,9 @@ const rand = (i) => {
   return x - Math.floor(x)
 }
 
-const STARS = Array.from({ length: 80 }, (_, i) => ({
+const STARS = Array.from({ length: 150 }, (_, i) => ({
   x: rand(i) * 1600,
-  y: rand(i + 100) * 480,
+  y: rand(i + 100) * 980 - 500,
   r: 0.8 + rand(i + 200) * 1.4,
   delay: rand(i + 300) * 4,
 }))
@@ -192,10 +223,45 @@ function ChaletWindow({ x, y, w, h, shutter = 20, box = true, children }) {
 }
 
 function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
+  const svgRef = useRef(null)
+  const aspect = useAspect()
+  const portrait = isPortrait(aspect)
+  const target = frame(aspect, portrait ? MUST_PORTRAIT : MUST_LANDSCAPE, FULL)
+  useViewBox(svgRef, target, 'outside')
+
+  // Drie stappen richting de deur: de viewBox zoomt in rond de deur en wiegt mee
+  const { x, y, w, h } = target
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!walking || !svg || reducedMotion()) return
+    let raf
+    const start = performance.now()
+    const bob = h / 900
+    const step = (now) => {
+      const p = Math.min(1, (now - start) / WALK_MS)
+      const { s, dx, dy } = walkAt(p)
+      setViewBox(svg, {
+        x: DOOR.x + (x - DOOR.x - dx * bob) / s,
+        y: DOOR.y + (y - DOOR.y - dy * bob) / s,
+        w: w / s,
+        h: h / s,
+      })
+      if (p < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [walking, x, y, w, h])
+
+  // Rechtop: maan en vallende ster schuiven mee met de bovenrand van het beeld
+  const moon = portrait ? { x: 1010, y: Math.min(150, y + 95) } : { x: 1290, y: 150 }
+  const shootY = Math.min(80, y + 40)
+  const shoot = portrait ? `M560 ${shootY - 60} L 900 ${shootY + 64}` : 'M260 80 L 620 211'
+
   return (
+    <div className="outside-wrap">
     <svg
+      ref={svgRef}
       className={`outside${walking ? ' outside--walking' : ''}`}
-      viewBox="0 0 1600 900"
       preserveAspectRatio="xMidYMid slice"
       aria-label={`Een besneeuwd huis in de nacht. Nog ${daysLeft} ${daysLeft === 1 ? 'dag' : 'dagen'} tot december.`}
     >
@@ -228,45 +294,46 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
         <clipPath id="outHouseClip">
           <path d="M604 452 L 800 288 L 996 452 Z" />
         </clipPath>
-        <linearGradient id="outShoot" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="90" y2="0">
+        <linearGradient id="outShoot" gradientUnits="userSpaceOnUse" x1="-90" y1="0" x2="0" y2="0">
           <stop offset="0" stopColor="#fff" stopOpacity="0" />
           <stop offset="1" stopColor="#fff" stopOpacity="1" />
         </linearGradient>
-        <radialGradient id="outVignette" cx="50%" cy="50%" r="75%">
-          <stop offset="0.6" stopColor="#000" stopOpacity="0" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.5" />
-        </radialGradient>
       </defs>
 
       {/* Alles wat 'in de wereld' staat: hier lopen we naartoe bij het binnengaan */}
       <g className="out-world">
       {/* Lucht, sterren en maan */}
-      <rect width="1600" height="900" fill="url(#outSky)" />
+      <rect x="-1000" y="-1200" width="3600" height="2100" fill="url(#outSky)" />
       {STARS.map((s, i) => (
         <circle key={i} className="out-star" cx={s.x} cy={s.y} r={s.r} style={{ '--delay': `${s.delay}s` }} />
       ))}
-      <circle cx="1290" cy="150" r="130" fill="url(#outMoonGlow)" />
-      <circle cx="1290" cy="150" r="44" fill="#fdf6d8" />
-      <circle cx="1276" cy="140" r="8" fill="#ece3bf" />
-      <circle cx="1302" cy="166" r="5" fill="#ece3bf" />
+      <g transform={`translate(${moon.x - 1290} ${moon.y - 150})`}>
+        <circle cx="1290" cy="150" r="130" fill="url(#outMoonGlow)" />
+        <circle cx="1290" cy="150" r="44" fill="#fdf6d8" />
+        <circle cx="1276" cy="140" r="8" fill="#ece3bf" />
+        <circle cx="1302" cy="166" r="5" fill="#ece3bf" />
+      </g>
 
       {/* Af en toe een vallende ster */}
-      <g className="out-shooting">
-        <line x1="0" y1="0" x2="90" y2="0" stroke="url(#outShoot)" strokeWidth="2.5" strokeLinecap="round" />
+      <g className="out-shooting" opacity="0">
+        <line x1="-90" y1="0" x2="0" y2="0" stroke="url(#outShoot)" strokeWidth="2.5" strokeLinecap="round" />
+        <animateMotion key={shoot} path={shoot} rotate="auto" dur="11s" begin="3s" repeatCount="indefinite"
+          keyPoints="0;1;1" keyTimes="0;0.06;1" calcMode="linear" />
+        <animate attributeName="opacity" values="0;1;0;0" keyTimes="0;0.01;0.06;1" dur="11s" begin="3s" repeatCount="indefinite" />
       </g>
 
       {/* Verre heuvel en bomen */}
-      <path d="M0 600 Q 300 560 620 588 T 1220 578 T 1600 588 V 900 H 0 Z" fill="#b9c9e2" />
+      <path d="M0 600 Q 300 560 620 588 T 1220 578 T 1600 588 V 2200 H 0 Z" fill="#b9c9e2" />
       {FAR_TREES.map((t, i) => (
         <Pine key={i} {...t} color="#2b4660" snow="#d6e1f2" />
       ))}
-      <path d="M0 620 Q 400 596 820 612 T 1600 606 V 900 H 0 Z" fill="#d3dff0" />
+      <path d="M0 620 Q 400 596 820 612 T 1600 606 V 2200 H 0 Z" fill="#d3dff0" />
       {NEAR_TREES.map((t, i) => (
         <Pine key={i} {...t} color="#1c3a33" />
       ))}
 
       {/* Besneeuwde grond */}
-      <path d="M0 645 Q 400 618 800 638 T 1600 632 V 900 H 0 Z" fill="url(#outGround)" />
+      <path d="M0 645 Q 400 618 800 638 T 1600 632 V 2200 H 0 Z" fill="url(#outGround)" />
 
       {/* Houten hekjes in de sneeuw */}
       <Fence x1={-20} x2={270} base={684} />
@@ -277,7 +344,7 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
       <ellipse cx="922" cy="668" rx="80" ry="14" fill="#ffcf70" opacity="0.25" />
 
       {/* Pad naar de deur met voetstappen */}
-      <path d="M772 646 L 828 646 L 980 900 L 620 900 Z" fill="#c6d4e8" />
+      <path d="M772 646 L 828 646 L 1730 2160 L -130 2160 Z" fill="#c6d4e8" />
       {FOOTPRINTS.map((f, i) => (
         <ellipse key={i} cx={f.x} cy={f.y} rx={4 * f.s} ry={7 * f.s} fill="#a9bbd6" />
       ))}
@@ -521,7 +588,7 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
       </g>
 
       {/* Aftelbordje */}
-      <g transform="translate(1250 700) rotate(-4) scale(1.25) translate(-1450 -688)" style={{ filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.4))' }}>
+      <g transform={portrait ? 'translate(800 880) rotate(-3) scale(1.25) translate(-1450 -688)' : 'translate(1250 700) rotate(-4) scale(1.25) translate(-1450 -688)'} style={{ filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.4))' }}>
         <rect x="1442" y="770" width="16" height="200" fill="#5b3a24" />
         <rect x="1335" y="688" width="230" height="92" rx="10" fill="#5b3a24" />
         <rect x="1343" y="696" width="214" height="76" rx="6" fill="#8b5a2b" />
@@ -537,7 +604,10 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
 
       </g>
 
-      {/* Vallende sneeuw */}
+    </svg>
+
+    {/* Vallende sneeuw: los van de wereld, zodat je er bij het lopen doorheen gaat */}
+    <svg className="out-snow" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       {SNOWFLAKES.map((f, i) => (
         <circle
           key={i}
@@ -548,19 +618,14 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
           style={{ '--duration': `${f.duration}s`, '--delay': `${f.delay}s`, '--drift': `${f.drift}px` }}
         />
       ))}
-
-      <rect width="1600" height="900" fill="url(#outVignette)" pointerEvents="none" />
-
-      {/* Na de laatste stap: zwart naar binnen */}
-      {walking && (
-        <rect
-          className="out-fade"
-          width="1600"
-          height="900"
-          onAnimationEnd={(e) => e.animationName === 'out-fade-in' && onWalkEnd?.()}
-        />
-      )}
     </svg>
+    <div className="out-vignette" />
+
+    {/* Na de laatste stap: zwart naar binnen */}
+    {walking && (
+      <div className="out-fade" onAnimationEnd={(e) => e.animationName === 'out-fade-in' && onWalkEnd?.()} />
+    )}
+    </div>
   )
 }
 

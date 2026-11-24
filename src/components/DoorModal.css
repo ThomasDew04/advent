@@ -3,12 +3,17 @@
   inset: 0;
   display: grid;
   place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
   background: rgba(20, 10, 5, 0.55);
   animation: fade-in 0.3s ease-out;
 }
 
 .door-card {
-  width: min(90vw, 420px);
+  width: min(100%, 420px);
+  max-height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
   padding: 32px 28px 26px;
   border-radius: 18px;
   background: #fdf3dc;
@@ -32,7 +37,7 @@
 }
 
 .door-card--photo {
-  width: min(90vw, 520px);
+  width: min(100%, 520px);
 }
 
 .door-body {
@@ -138,6 +143,27 @@
 }
 .door-close:hover {
   background: #255a34;
+}
+
+/* Gsm rechtop of liggend: alles wat compacter */
+@media (max-width: 480px), (max-height: 500px) {
+  .door-card {
+    padding: 22px 18px 18px;
+  }
+  .door-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+  }
+  .door-body {
+    font-size: 1rem;
+    margin-bottom: 18px;
+  }
+}
+@media (max-height: 500px) {
+  .door-photo img,
+  .door-photo-placeholder {
+    aspect-ratio: 16 / 9;
+  }
 }
 
 @keyframes fade-in {

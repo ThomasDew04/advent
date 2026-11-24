@@ -1,7 +1,27 @@
-.outside {
-  display: block;
+.outside-wrap {
+  position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.outside,
+.out-snow {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Sneeuw en donkere randjes liggen als losse laag bovenop de wereld */
+.out-snow,
+.out-vignette,
+.out-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.out-vignette {
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 .out-star {
@@ -69,24 +89,114 @@
   }
 }
 
-.out-shooting {
-  transform-box: view-box;
-  transform-origin: 0 0;
-  opacity: 0;
-  animation: out-shoot 11s ease-out 3s infinite;
+/* Decoratieve gloed en sneeuw mogen geen klikken opvangen */
+.outside circle[fill^='url(#out'],
+.outside ellipse,
+.out-flake,
+.out-smoke {
+  pointer-events: none;
 }
-@keyframes out-shoot {
-  0% {
-    transform: translate(260px, 80px) rotate(20deg);
-    opacity: 0;
+
+.out-door {
+  cursor: pointer;
+  outline: none;
+}
+.out-door:focus-visible {
+  filter: brightness(1.2) drop-shadow(0 0 6px #ffe9a8);
+}
+@media (hover: hover) {
+  .out-door:hover {
+    filter: brightness(1.2) drop-shadow(0 0 6px #ffe9a8);
   }
-  1% {
+}
+
+.out-sign-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 25px;
+  font-weight: bold;
+  font-style: italic;
+  fill: #fdf3dc;
+}
+
+/* Tijdens de POV-wandeling (zie OutsideScene.jsx) niet meer klikken */
+.outside--walking {
+  pointer-events: none;
+}
+.outside--walking .out-door {
+  filter: none;
+}
+
+.out-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.out-vignette {
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.out-star {
+  fill: #fff;
+  animation: out-twinkle 3.5s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-twinkle {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.out-flake {
+  fill: #fff;
+  opacity: 0.85;
+  animation: out-fall var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-fall {
+  to {
+    transform: translate(var(--drift), 960px);
+  }
+}
+
+.out-smoke {
+  fill: #cfd8e6;
+  opacity: 0;
+  animation: out-smoke 4s ease-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  20% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-40px, -130px) scale(1.8);
+  }
+}
+.out-smoke {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.out-light {
+  animation: out-blink 2.5s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes out-blink {
+  0%,
+  100% {
     opacity: 1;
   }
-  6%,
-  100% {
-    transform: translate(620px, 211px) rotate(20deg);
-    opacity: 0;
+  50% {
+    opacity: 0.35;
   }
 }
 
@@ -102,9 +212,13 @@
   cursor: pointer;
   outline: none;
 }
-.out-door:hover,
 .out-door:focus-visible {
   filter: brightness(1.2) drop-shadow(0 0 6px #ffe9a8);
+}
+@media (hover: hover) {
+  .out-door:hover {
+    filter: brightness(1.2) drop-shadow(0 0 6px #ffe9a8);
+  }
 }
 
 .out-sign-text {
@@ -163,9 +277,8 @@
 }
 
 .out-fade {
-  fill: #1a0f0a;
+  background: #1a0f0a;
   opacity: 0;
-  pointer-events: none;
   animation: out-fade-in 2.7s ease-in forwards;
 }
 @keyframes out-fade-in {
@@ -179,9 +292,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .outside--walking .out-world {
-    animation: none;
-  }
   .out-fade {
     animation-duration: 0.6s;
   }
