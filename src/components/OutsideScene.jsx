@@ -292,7 +292,7 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </radialGradient>
         <clipPath id="outHouseClip">
-          <path d="M604 452 L 800 288 L 996 452 Z" />
+          <path d="M592 452 V 441 L 800 288 L 1008 441 V 452 Z" />
         </clipPath>
         <linearGradient id="outShoot" gradientUnits="userSpaceOnUse" x1="-90" y1="0" x2="0" y2="0">
           <stop offset="0" stopColor="#fff" stopOpacity="0" />
@@ -373,7 +373,7 @@ function OutsideScene({ daysLeft, onDoorClick, walking = false, onWalkEnd }) {
         ))}
 
         {/* Gevel: verticale planken */}
-        <path d="M604 452 L 800 288 L 996 452 Z" fill="#5e3b24" />
+        <path d="M592 452 V 441 L 800 288 L 1008 441 V 452 Z" fill="#5e3b24" />
         <g clipPath="url(#outHouseClip)">
           {Array.from({ length: 22 }, (_, i) => (
             <line key={i} x1={610 + i * 18} y1="280" x2={610 + i * 18} y2="452" stroke="#4a2d1b" strokeWidth="3" />
