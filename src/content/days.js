@@ -2,18 +2,22 @@
 //
 //   text  – een boodschap:      { type: 'text', title, text }
 //   photo – foto met tekst:     { type: 'photo', title, image, alt, caption }
-//           (zet de foto in public/luikjes/ en gebruik bv. image: '/luikjes/dag2.jpg';
+//           (zet de foto in src/images/, importeer hem bovenaan dit bestand en gebruik bv. image: clownie;
 //            zonder image wordt een placeholder getoond)
 //   quiz  – mini-spelletje:     { type: 'quiz', title, question, options: [...], answer, explanation }
 //           (answer = index van het juiste antwoord, beginnend bij 0)
 //
 // Dagen die hier nog niet staan, tonen "Wat hier in zit, volgt binnenkort…".
 
+import clownie from '../images/clownie.jpg'
+
 export const DAYS = {
   1: {
-    type: 'text',
+    type: 'photo',
     title: 'Welkom in december!',
-    text: 'Dit is een placeholder voor het eerste luikje. Hier komt straks een lieve boodschap, een gedichtje of een leuk weetje.',
+    image: clownie,
+    alt: 'Een kleine clown met een rode neus, een papieren hoedje en een hartje op de wang',
+    caption: 'Kom elke dag tot kerst terug voor een klein berichtje 🤗',
   },
   2: {
     type: 'photo',

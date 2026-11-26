@@ -65,7 +65,14 @@
   box-sizing: border-box;
 }
 .door-photo img {
-  object-fit: cover;
+  /* foto in zijn eigen verhouding (ook staand), maar nooit hoger dan het scherm toelaat */
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(52vh, 480px);
+  max-height: min(52dvh, 480px);
+  aspect-ratio: auto;
+  margin: 0 auto;
 }
 .door-photo-placeholder {
   display: grid;
@@ -160,7 +167,6 @@
   }
 }
 @media (max-height: 500px) {
-  .door-photo img,
   .door-photo-placeholder {
     aspect-ratio: 16 / 9;
   }

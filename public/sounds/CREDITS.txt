@@ -2,3 +2,8 @@ snow-steps.mp3
   "4 dry snow steps" door qubodup
   Licentie: CC0 (publiek domein)
   https://opengameart.org/content/4-dry-snow-steps
+
+winter-wind.mp3
+  "Winter Wind" door wipics
+  Licentie: CC0 (publiek domein)
+  https://opengameart.org/node/114089

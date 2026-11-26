@@ -1,0 +1,225 @@
+/* Eenmalige animatie: kerstbal openbreken met een hamer */
+.break-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: radial-gradient(ellipse at center, rgba(30, 15, 8, 0.82), rgba(10, 5, 2, 0.94));
+  animation: break-in 0.35s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+@keyframes break-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.break-hint {
+  margin: 0;
+  padding: 0 12px;
+  text-align: center;
+  font: bold 1.35rem Georgia, 'Times New Roman', serif;
+  color: #fdf3dc;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  animation: break-hint 1.6s ease-in-out infinite;
+  transition: opacity 0.2s;
+}
+@keyframes break-hint {
+  50% {
+    opacity: 0.6;
+  }
+}
+.break-overlay:not(.is-ready) .break-hint {
+  opacity: 0;
+  animation: none;
+}
+
+.break-stage {
+  width: min(94vw, 76vh, 620px);
+  width: min(94vw, 76dvh, 620px);
+  height: auto;
+  overflow: visible;
+  cursor: pointer;
+  outline: none;
+}
+.break-overlay:not(.is-ready) .break-stage {
+  cursor: default;
+}
+
+/* De bal wiegt zachtjes zolang hij wacht */
+.break-bauble {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+.is-ready .break-bauble {
+  animation: break-sway 2.4s ease-in-out infinite alternate;
+}
+@keyframes break-sway {
+  from {
+    rotate: -3deg;
+  }
+  to {
+    rotate: 3deg;
+  }
+}
+.break-number {
+  font: bold 64px Georgia, 'Times New Roman', serif;
+  stroke: rgba(0, 0, 0, 0.3);
+  stroke-width: 4px;
+  paint-order: stroke;
+}
+
+/* Hamer: klaar om te slaan, dan de zwaai, dan terugveren en verdwijnen */
+.break-hammer {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  rotate: 34deg;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.4));
+}
+.is-ready .break-hammer {
+  animation: hammer-ready 0.9s ease-in-out infinite alternate;
+}
+@keyframes hammer-ready {
+  from {
+    rotate: 30deg;
+  }
+  to {
+    rotate: 38deg;
+  }
+}
+.is-swing .break-hammer {
+  animation: hammer-swing 0.26s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+@keyframes hammer-swing {
+  from {
+    rotate: 38deg;
+  }
+  to {
+    rotate: -4deg;
+  }
+}
+.is-crack .break-hammer {
+  animation: hammer-recoil 0.5s ease-out forwards;
+}
+@keyframes hammer-recoil {
+  from {
+    rotate: -4deg;
+  }
+  40% {
+    rotate: 12deg;
+    opacity: 1;
+  }
+  to {
+    rotate: 20deg;
+    opacity: 0;
+  }
+}
+.is-shatter .break-hammer {
+  opacity: 0;
+}
+
+/* Klap: beeld schudt, flits, barsten trekken door de bal */
+.is-crack .break-stage {
+  animation: break-shake 0.35s ease-out;
+}
+@keyframes break-shake {
+  20% {
+    translate: -8px 4px;
+  }
+  40% {
+    translate: 7px -5px;
+  }
+  60% {
+    translate: -5px 3px;
+  }
+  80% {
+    translate: 3px -2px;
+  }
+}
+.break-flash {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: break-flash 0.4s ease-out forwards;
+}
+@keyframes break-flash {
+  from {
+    opacity: 0.95;
+    scale: 0.4;
+  }
+  to {
+    opacity: 0;
+    scale: 3;
+  }
+}
+.break-crack path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: crack-draw 0.22s ease-out forwards;
+  animation-delay: var(--delay);
+}
+@keyframes crack-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Scherven, glitter en het dopje vliegen weg */
+.break-shard {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: shard-fly 0.95s cubic-bezier(0.15, 0.6, 0.35, 1) forwards;
+  animation-delay: var(--delay);
+}
+@keyframes shard-fly {
+  to {
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+.break-glitter {
+  animation: glitter-fly 0.9s ease-out forwards;
+  animation-delay: var(--delay);
+}
+@keyframes glitter-fly {
+  to {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+.break-cap-fall {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cap-fall 0.9s cubic-bezier(0.5, 0, 1, 1) forwards;
+}
+@keyframes cap-fall {
+  to {
+    transform: translate(-30px, 260px) rotate(-70deg);
+    opacity: 0;
+  }
+}
+.break-burst {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: break-burst 0.6s ease-out forwards;
+}
+@keyframes break-burst {
+  from {
+    opacity: 0.9;
+    scale: 0.3;
+  }
+  to {
+    opacity: 0;
+    scale: 3;
+  }
+}
+
+@media (max-width: 600px) {
+  .break-hint {
+    font-size: 1.1rem;
+  }
+}
